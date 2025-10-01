@@ -1,4 +1,6 @@
+using System;
 using System.Text;
+using System.Collections.Generic;
 
 namespace ExampleLib;
 
@@ -126,5 +128,96 @@ public static class TextUtil
                 currentWord.Clear();
             }
         }
+    }
+
+    /// <summary>
+    /// Преобразует римское число в арабское (0..3000).
+    /// Пустая строка = 0. Бросает исключение для некорректного римского числа.
+    /// </summary>
+    public static int ParseRoman(string text)
+    {
+        if (text is null)
+            throw new ArgumentNullException(nameof(text));
+
+        if (text.Length == 0)
+            return 0;
+
+        // Значение каждого символа
+        static int Val(char c) => c switch
+        {
+            'I' => 1,
+            'V' => 5,
+            'X' => 10,
+            'L' => 50,
+            'C' => 100,
+            'D' => 500,
+            'M' => 1000,
+            _ => -1
+        };
+
+        // Проверка допустимой вычитающей пары (a перед b)
+        static bool IsValidSubtractive(char a, char b) =>
+            (a == 'I' && (b == 'V' || b == 'X')) ||
+            (a == 'X' && (b == 'L' || b == 'C')) ||
+            (a == 'C' && (b == 'D' || b == 'M'));
+
+        int total = 0;
+        char lastSymbol = '\0';
+        int repeatCount = 0;
+
+        int i = 0;
+        while (i < text.Length)
+        {
+            char cur = text[i];
+            int curVal = Val(cur);
+            if (curVal < 0)
+                throw new ArgumentException($"Invalid Roman character '{cur}'", nameof(text));
+
+            // Повторение символов
+            if (cur == lastSymbol)
+                repeatCount++;
+            else
+            {
+                lastSymbol = cur;
+                repeatCount = 1;
+            }
+
+            // Ограничения на повторения
+            if ((cur == 'V' || cur == 'L' || cur == 'D') && repeatCount > 1)
+                throw new ArgumentException($"Invalid repetition of '{cur}'", nameof(text));
+            if ((cur == 'I' || cur == 'X' || cur == 'C' || cur == 'M') && repeatCount > 3)
+                throw new ArgumentException($"Too many repetitions of '{cur}'", nameof(text));
+
+            // Проверяем вычитание с последующим символом
+            if (i + 1 < text.Length)
+            {
+                char next = text[i + 1];
+                int nextVal = Val(next);
+                if (nextVal < 0)
+                    throw new ArgumentException($"Invalid Roman character '{next}'", nameof(text));
+
+                if (curVal < nextVal)
+                {
+                    if (!IsValidSubtractive(cur, next))
+                        throw new ArgumentException($"Invalid subtractive pair '{cur}{next}'", nameof(text));
+                    if (repeatCount > 1)
+                        throw new ArgumentException($"Invalid repeated symbol before subtractive pair '{cur}{next}'", nameof(text));
+
+                    total += nextVal - curVal;
+                    i += 2;
+                    lastSymbol = '\0';
+                    repeatCount = 0;
+                    continue;
+                }
+            }
+
+            total += curVal;
+            i++;
+        }
+
+        if (total < 0 || total > 3000)
+            throw new ArgumentOutOfRangeException(nameof(text), "Value out of range 0..3000");
+
+        return total;
     }
 }
