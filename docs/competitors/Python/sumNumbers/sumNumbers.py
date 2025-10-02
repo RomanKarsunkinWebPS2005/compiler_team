@@ -1,4 +1,4 @@
-﻿//SumNumbers — читает последовательность действительных чисел и печатает сумму чисел
+﻿#SumNumbers — читает последовательность действительных чисел и печатает сумму чисел
 
 input_str = input("Enter numbers in one line separated by spaces: ")
     
@@ -18,3 +18,4 @@ if numbers:
 else:
 
     print("No valid numbers were entered.")
+
