@@ -154,5 +154,4 @@ public class TextUtilTest
     {
         Assert.Throws<ArgumentException>(() => TextUtil.ParseRoman("MMMM"));
     }
-
 }

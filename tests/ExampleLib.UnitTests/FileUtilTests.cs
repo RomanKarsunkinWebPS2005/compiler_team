@@ -51,7 +51,6 @@ public class FileUtilTests
     }
 
     // ---------- Тесты к AddLineNumbers ----------
-
     [Fact]
     public void AddLineNumbers_MultilineFile_Works()
     {

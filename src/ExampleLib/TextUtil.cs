@@ -1,6 +1,6 @@
 using System;
-using System.Text;
 using System.Collections.Generic;
+using System.Text;
 
 namespace ExampleLib;
 
@@ -137,10 +137,14 @@ public static class TextUtil
     public static int ParseRoman(string text)
     {
         if (text is null)
+        {
             throw new ArgumentNullException(nameof(text));
+        }
 
         if (text.Length == 0)
+        {
             return 0;
+        }
 
         // Значение каждого символа
         static int Val(char c) => c switch
@@ -171,11 +175,15 @@ public static class TextUtil
             char cur = text[i];
             int curVal = Val(cur);
             if (curVal < 0)
+            {
                 throw new ArgumentException($"Invalid Roman character '{cur}'", nameof(text));
+            }
 
             // Повторение символов
             if (cur == lastSymbol)
+            {
                 repeatCount++;
+            }
             else
             {
                 lastSymbol = cur;
@@ -184,9 +192,14 @@ public static class TextUtil
 
             // Ограничения на повторения
             if ((cur == 'V' || cur == 'L' || cur == 'D') && repeatCount > 1)
+            {
                 throw new ArgumentException($"Invalid repetition of '{cur}'", nameof(text));
+            }
+
             if ((cur == 'I' || cur == 'X' || cur == 'C' || cur == 'M') && repeatCount > 3)
+            {
                 throw new ArgumentException($"Too many repetitions of '{cur}'", nameof(text));
+            }
 
             // Проверяем вычитание с последующим символом
             if (i + 1 < text.Length)
@@ -194,14 +207,21 @@ public static class TextUtil
                 char next = text[i + 1];
                 int nextVal = Val(next);
                 if (nextVal < 0)
+                {
                     throw new ArgumentException($"Invalid Roman character '{next}'", nameof(text));
+                }
 
                 if (curVal < nextVal)
                 {
                     if (!IsValidSubtractive(cur, next))
+                    {
                         throw new ArgumentException($"Invalid subtractive pair '{cur}{next}'", nameof(text));
+                    }
+
                     if (repeatCount > 1)
+                    {
                         throw new ArgumentException($"Invalid repeated symbol before subtractive pair '{cur}{next}'", nameof(text));
+                    }
 
                     total += nextVal - curVal;
                     i += 2;
@@ -216,7 +236,9 @@ public static class TextUtil
         }
 
         if (total < 0 || total > 3000)
+        {
             throw new ArgumentOutOfRangeException(nameof(text), "Value out of range 0..3000");
+        }
 
         return total;
     }
