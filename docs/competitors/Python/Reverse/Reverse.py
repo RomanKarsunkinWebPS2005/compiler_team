@@ -1,7 +1,8 @@
-#Reverse — читает строку и печатает её в перевёрнутом виде
+п»ї//Reverse вЂ” С‡РёС‚Р°РµС‚ СЃС‚СЂРѕРєСѓ Рё РїРµС‡Р°С‚Р°РµС‚ РµС‘ РІ РїРµСЂРµРІС‘СЂРЅСѓС‚РѕРј РІРёРґРµ
 
 input_str = input("Enter input string: ")
 reversed_str = input_str[::-1]
 
 print("Input string:", input_str)
 print("Reversed string:", reversed_str)
+
