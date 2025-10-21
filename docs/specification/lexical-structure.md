@@ -8,16 +8,9 @@
 ```minion
 bello!
 
-boss greeting
-oca!
-    me main
-    oca!
-        trusela name Spaghetti naidu!
-        guoleila (name) naidu!
-        tulalilloo ti amo ("Hello, " loka name loka "!") naidu!
-        tank yu naidu!
-    stopa
-stopa
+trusela name Spaghetti naidu!
+guoleila (name) naidu!
+tulalilloo ti amo ("Hello, " loka name loka "!") naidu!
 ```
 
 **C#**
@@ -42,22 +35,16 @@ class greeting
 ```minion
 bello!
 
-boss evencheck
+poop num Banana naidu!
+guoleila (num) naidu!
+
+bi-do (con (pado num Banana 2) Banana 0) 
 oca!
-    me main
-    oca!
-        poop num Banana naidu!
-        guoleila (num) naidu!
-        
-        bi-do (con (pado num Banana 2) Banana 0) oca!
-            tulalilloo ti amo ("Even") naidu!
-        stopa
-        uh-oh oca!
-            tulalilloo ti amo ("Odd") naidu!
-        stopa
-        
-        tank yu naidu!
-    stopa
+    tulalilloo ti amo ("Even") naidu!
+stopa
+uh-oh 
+oca!
+    tulalilloo ti amo ("Odd") naidu!
 stopa
 ```
 
@@ -86,25 +73,17 @@ class evencheck
 ```minion
 bello!
 
-boss powercalc
-oca!
-    me main
-    oca!
-        tulalilloo ti amo ("Base?") naidu!
-        poop base Banana naidu!
-        guoleila (base) naidu!
-        
-        tulalilloo ti amo ("Exponent?") naidu!
-        poop exp Banana naidu!
-        guoleila (exp) naidu!
-        
-        poop result Banana naidu!
-        result beedo (base Banana exp) naidu!
-        tulalilloo ti amo ("Result: " loka result loka) naidu!
-        
-        tank yu naidu!
-    stopa
-stopa
+tulalilloo ti amo ("Base?") naidu!
+poop base Banana naidu!
+guoleila (base) naidu!
+
+tulalilloo ti amo ("Exponent?") naidu!
+poop exp Banana naidu!
+guoleila (exp) naidu!
+
+poop result Banana naidu!
+result beedo (base Banana exp) naidu!
+tulalilloo ti amo ("Result: " loka result loka) naidu!
 ```
 
 **C#**
@@ -135,10 +114,6 @@ class powercalc
 | Слово                 | Назначение                                |
 |----------------------|--------------------------------------------|
 | `bello!`             | Начало программы                           |
-| `boss`               | Объявление класса                          |
-| `mini boss`          | Интерфейс                                  |
-| `big boss`           | Абстрактный класс                          |
-| `me`                 | Объявление метода                          |
 | `oca!`               | Начало блока                               |
 | `stopa`              | Конец блока                                |
 | `bapple`             | Неизменяемая переменная (`readonly`)       |
@@ -178,7 +153,6 @@ class powercalc
 | `Gelato`    | Логическое значение          | `bool`        |
 | `Papaya`    | Число с плавающей точкой     | `double`      |
 | `Spaghetti` | Строка                       | `string`      |
-| `Naletuna`  | Исключение                   | `Exception`   |
 
 ---
 
@@ -192,20 +166,18 @@ class powercalc
 - Двоичные: `0b101010`
 
 ### 5.2. Строковые литералы
-- Обрамляются `! ... !`:
-  ```minion
-  banana msg ! Yam, yam! !
-  ```
-- Экранирование:
+- Строки обрамляются **восклицательными знаками**: `!...!`
+- Для вставки символа `!` внутрь строки используется **удвоение**: `!!`
+- Поддерживается управляющая последовательность:
   - `\n` — новая строка
-  - `\b` — звук «банан!»
-- Многострочные:
+- Примеры:
   ```minion
-  banana poem !
-  Tulalilloo ti amo!
-  Ba-na-na!
-  !
+  !Hello!                    // → Hello
+  !Hello!!                   // → Hello!
+  !You scored !!100!! points!\n! // → You scored !100! points! 
+                                                    + перевод строки
   ```
+
 
 ### 5.3. Логические литералы
 - `Da` → `true`
@@ -229,8 +201,8 @@ class powercalc
 | Больше         | `looka too`  | `x looka too t`        |
 | Меньше         | `la`         | `x la y`               |
 | Логическое НЕ  | `makoroni`   | `makoroni flag`        |
-| Логическое И   | `tropa`      | `tropa a b`            |
-| Логическое ИЛИ | `bo-ca`      | `bo-ca a b`            |
+| Логическое И   | `tropa`      | `a tropa a`            |
+| Логическое ИЛИ | `bo-ca`      | `a bo-ca b`            |
 
 
 
@@ -278,7 +250,6 @@ bi-do (makoroni con score Banana 100) oca! ... stopa
 | Лексема      | Назначение                                      |
 |--------------|-------------------------------------------------|
 | `( )`        | Группировка выражений, аргументов и приоритета |
-| `"..."`      | Строковые литералы                              |
 | `loka`       | Маркер интерполяции переменных в строках        |
 | `naidu!`     | Завершение выражения (аналог точки с запятой `;`) |
 | пробел       | Разделитель между токенами (ключевыми словами, идентификаторами, операторами) |
