@@ -7,14 +7,14 @@
 - **Числовые литералы**: целые (`42`, `-7`) и дробные (`3.14`, `-0.5`)
 - **Логические литералы**: `da` (истина), `no` (ложь)
 - **Строковые литералы**: `"Hello!"`, с интерполяцией через `loka`
-- **Переменные**: идентификаторы (пример: `score`, `name`)
+- **Переменные**: идентификаторы
 - **Операторы**:
   - Арифметические: `melomo` (+), `flavuk` (–), `dibotada` (*), `poopaye` (/), `pado` (%), `beedo` (^)
   - Сравнения: `con` (==), `nocon` (!=), `la` (<), `lacon` (<=), `looka too` (>), `looka too con` (>=)
   - Логические: `makoroni` (НЕ), `tropa` (И), `bo-ca` (ИЛИ)
 - **Скобки** для группировки: `(выражение)`
-- **Встроенные функции**: `abs`, `min`, `max`
-- **Константы**: `pi`, `euler`
+- **Встроенные функции**: `muak` (abs), `miniboss` (min), `bigboss` (max)
+- **Константы**: `belloPi`, `belloE`
 
 ---
 
@@ -131,16 +131,11 @@ primary-expression = number-literal
 
 (* Числовые литералы *)
 number-literal = integer-literal | float-literal ;
-integer-literal = digit , { digit | "_" , digit } ;
-float-literal = digit , { digit | "_" , digit } , "." , digit , { digit | "_" , digit } ;
+integer-literal = [ "-" ] , digit , { digit } ;
+float-literal = [ "-" ] , digit , { digit } , "." , digit , { digit } ;
 
 (* Логические литералы *)
 boolean-literal = "da" | "no" ;
-
-(* Строковые литералы *)
-string-literal = '"' , { string-char } , '"' ;
-string-char = ? любой символ кроме " и \ ? | escape-sequence ;
-escape-sequence = "\" , ( "n" | """ ) ;
 
 (* Строковые литералы *)
 string-literal = "!" , { string-char } , "!" ;
