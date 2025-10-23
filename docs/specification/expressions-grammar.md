@@ -111,14 +111,15 @@ additive-expression = multiplicative-expression ,
 multiplicative-expression = power-expression ,
                             { ("dibotada" | "poopaye" | "pado") , power-expression } ;
 
-(* Возведение в степень — правая ассоциативность *)
-power-expression = unary-expression , [ "beedo" , power-expression ] ;
 
-(* Унарные операторы: +, -, ! *)
-unary-expression = primary-expression
+
+(* Унарные операторы: +, - *)
+unary-expression = power-expression
                  | "melomo" , unary-expression
-                 | "flavuk" , unary-expression
-                 | "makoroni" , unary-expression ;
+                 | "flavuk" , unary-expression;
+
+(* Возведение в степень — правая ассоциативность *)
+power-expression = primary-expression , [ "beedo" , power-expression ] ;
 
 (* Первичные выражения *)
 primary-expression = number-literal
