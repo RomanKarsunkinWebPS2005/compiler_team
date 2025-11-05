@@ -1,0 +1,20 @@
+// Программа: FahrenheitToCelsius
+// Переводит температуру из шкалы Фаренгейта в Цельсия: C = (F - 32) / 1.8
+bello!
+
+// Константы формулы
+trusela offset Papaya 32.0 naidu!   // смещение 32°F
+trusela scale Papaya 1.8 naidu!     // масштабный коэффициент
+
+// Переменная для входной температуры
+poop f Papaya naidu!
+
+// Ввод температуры в °F
+guoleila (f) naidu!
+
+// Вычисление температуры в °C
+poop c Papaya naidu!
+c lumai (f flavuk offset) poopaye scale naidu!  // C = (F - 32) / 1.8
+
+// Вывод результата
+tulalilloo ti amo (c) naidu!
