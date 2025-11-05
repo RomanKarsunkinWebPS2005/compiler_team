@@ -111,8 +111,6 @@ additive-expression = multiplicative-expression ,
 multiplicative-expression = power-expression ,
                             { ("dibotada" | "poopaye" | "pado") , power-expression } ;
 
-
-
 (* Унарные операторы: +, - *)
 unary-expression = power-expression
                  | "melomo" , unary-expression
