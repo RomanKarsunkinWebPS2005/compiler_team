@@ -1,0 +1,19 @@
+// Программа: CircleSquare
+// Вычисляет площадь круга по радиусу: S = π * r^2
+bello!
+
+// Константа: число пи
+trusela pi Papaya bellopi naidu!
+
+// Переменная для радиуса
+poop radius Papaya naidu!
+
+// Ввод радиуса
+guoleila (radius) naidu!
+
+// Вычисление площади
+poop area Papaya naidu!
+area lumai pi dibotada (radius beedo 2) naidu!  // S = π * (r^2)
+
+// Вывод результата
+tulalilloo ti amo (area) naidu!
