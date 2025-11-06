@@ -20,7 +20,7 @@ bello!
 tulalilloo ti amo (!Enter number:! ) naidu!
 poop num Banana naidu!
 guoleila (num) naidu!
-bi-do (con (pado num Banana 2) Banana 0) oca!
+bi-do ((num pado 2) con 0) oca!
     tulalilloo ti amo (!Even!) naidu!
 stopa
 uh-oh oca!
