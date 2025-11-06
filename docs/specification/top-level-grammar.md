@@ -9,7 +9,7 @@ bello!
 tulalilloo ti amo (!What is your name?! ) naidu!
 trusela name Spaghetti naidu!
 guoleila (name) naidu!
-tulalilloo ti amo (!Hello, ! loka name loka !!) naidu!
+tulalilloo ti amo (!Hello, loka name loka !!) naidu!
 ```
 
 ### Пример 2: Проверка чётности
