@@ -30,12 +30,14 @@ stopa
 
 ## Ключевые особенности языка
 
-- **Программа начинается** с обязательной директивы `bello!`
+- **Программа начинается** с `bello!`
 - Программа состоит из **последовательности инструкций на верхнем уровне**
-- **Переменные** объявляются явно с указанием типа:
+- **Объявления**:
   - `poop` — изменяемая переменная
-  - `trusela` — константа времени компиляции (`const`)
-- **Типы данных**: `Banana` (int), `Gelato` (bool), `Papaya` (double), `Spaghetti` (string)
+  - `trusela` — константа (`const`)
+  - `boss` — функция 
+- **Типы данных**: (`Banana` (int), `Gelato` (bool), `Papaya` (double), `Spaghetti` (string)) На данный момент поддерживается один тип данных — `Papaya` (double)
+- **Логические условия**: 0 = ложь, ≠0 = истина
 - **Инструкции** разделяются лексемой `naidu!` (аналог точки с запятой)
 - **Блоки кода** ограничиваются `oca!` и `stopa`
 - **Ввод-вывод** осуществляется через специальные инструкции:
@@ -44,21 +46,99 @@ stopa
 
 ## Семантические правила
 
+- **Все переменные и параметры** — типа **Papaya**
 - **Объявление переменной обязательно** перед использованием
 - **Повторное объявление переменной с тем же именем** в одной области видимости **запрещено**
 - **Область видимости** переменных ограничена блоком (`oca!` ... `stopa`)
 - **Инициализация**:
   - `poop` может быть объявлена без инициализации, но должна быть инициализирована до использования
-  - `trusela` **обязательно инициализируется** при объявлении
+  - `trusela` инициализируется константным выражением (литерал, belloPi, belloE), не может содержать переменные, вызовы функций или операторы
+  - `boss` всегда возвращает Papaya, тело — блок с обязательным tank yu (return)
 - **Доступ к необъявленной переменной** — ошибка компиляции
 - **Присваивание** осуществляется через оператор `lumai`
 - **Все инструкции должны завершаться** `naidu!`
+- **Проблема висячего else** решается на уровне грамматики: каждый uh-oh связывается с ближайшим предшествующим bi-do, у которого ещё нет uh-oh.  Это достигается структурой грамматики, где uh-oh является необязательной частью правила if-statement, а не отдельной инструкцией.
+
+
+## Параметры и аргументы функции
+
+### Объявление параметров
+
+- В языке **допускаются функции без параметров**.  
+  Пример:  
+  ```minion
+  boss pi Papaya () oca!
+      tank yu belloPi naidu!
+  stopa
+  ```
+
+- **Каждый параметр** в объявлении функции **не содержит указания типа**.  
+  **Все параметры неявно имеют тип `Papaya`** (единственный числовой тип в языке).  
+
+- **Грамматика списка параметров**:
+  ```ebnf
+  parameter-list = identifier , { "," , identifier } ;
+  ```
+  Если параметров нет, список пропускается (пустые скобки `()`).
+
+- Пример объявления с параметрами:
+  ```minion
+  boss add Papaya (x, y) oca!
+      tank yu x melomo y naidu!
+  stopa
+  ```
+
+### Вызов функции и аргументы
+
+- **Список аргументов** при вызове функции — это **список выражений**, разделённых запятыми:
+  ```ebnf
+  argument-list = expression , { "," , expression } ;
+  ```
+
+- Аргументы **могут быть любыми выражениями**: литералами, переменными, вызовами других функций и т.д.
+
+- Пример вызова:
+  ```minion
+  poop result Papaya naidu!
+  result lumai add (5.0, square (3.0)) naidu!
+  ```
+
+### Порядок вычисления аргументов
+
+- **Аргументы вычисляются строго слева направо**.  
+  Это означает, что если в аргументах есть побочные эффекты (например, ввод числа), они происходят в порядке записи.
+
+- Пример:
+  ```minion
+  boss sum Papaya (a, b) oca!
+      tank yu a melomo b naidu!
+  stopa
+
+  tulalilloo ti amo (sum (guoleila (), guoleila ())) naidu!
+  ```
+  → Сначала будет выполнен **первый** `guoleila()`, затем **второй**.
+
 
 ## Грамматика в нотации EBNF
 
-```ebnf
 (* Основная программа *)
-program = "bello!" , { statement } ;
+program = "bello!" , { top-level-item } ;
+
+top-level-item = const-declaration
+               | function-definition
+               | statement ;
+
+(* Объявление константы *)
+const-declaration = "trusela" , identifier , "Papaya" , const-value , "naidu!" ;
+
+(* Константное значение — только литерал или встроенная константа *)
+const-value = number-literal
+            | constant ;
+
+(* Объявление функции *)
+function-definition = "boss" , identifier , "Papaya" , "(" , [ parameter-list ] , ")" , block ;
+
+parameter-list = identifier , { "," , identifier } ;
 
 (* Инструкция *)
 statement = variable-declaration
@@ -67,22 +147,12 @@ statement = variable-declaration
           | output-statement
           | if-statement
           | while-statement
-          | for-statement
+          | return-statement
           | expression-statement
           , "naidu!" ;
 
 (* Объявление переменной *)
-variable-declaration = mutable-var | constant-var ;
-
-mutable-var = "poop" , identifier , type-specifier ;
-
-constant-var = "trusela" , identifier , type-specifier , const-value ;
-
-(* Константное значение — только литерал или предопределённая константа *)
-const-value = number-literal
-            | boolean-literal
-            | string-literal
-            | constant ;
+variable-declaration = "poop" , identifier , "Papaya" ;
 
 (* Присваивание *)
 assignment-statement = identifier , "lumai" , expression ;
@@ -99,85 +169,11 @@ if-statement = "bi-do" , "(" , expression , ")" , block , [ "uh-oh" , block ] ;
 (* Цикл while *)
 while-statement = "kemari" , "(" , expression , ")" , block ;
 
-(* Цикл for *)
-for-statement = "again" , "(" , for-init , "con" , expression , "le" , expression , ")" , block ;
-for-init = identifier , type-specifier ;
+(* Возврат из функции *)
+return-statement = "tank yu" , expression ;
 
 (* Выражение как инструкция *)
 expression-statement = expression ;
 
 (* Блок кода *)
 block = "oca!" , { statement } , "stopa" ;
-
-(* Тип данных *)
-type-specifier = "Banana" | "Gelato" | "Papaya" | "Spaghetti";
-
-(* Выражения *)
-expression = logical-or-expression ;
-
-(* Логическое ИЛИ *)
-logical-or-expression = logical-and-expression , { "bo-ca" , logical-and-expression } ;
-
-(* Логическое И *)
-logical-and-expression = equality-expression , { "tropa" , equality-expression } ;
-
-(* Равенство и неравенство *)
-equality-expression = relational-expression , { ("con" | "nocon") , relational-expression } ;
-
-(* Сравнения: <, <=, >, >= *)
-relational-expression = additive-expression ,
-                        { ("looka too" , [ "con" ] | "la" , [ "con" ]) , additive-expression } ;
-
-(* Сложение и вычитание *)
-additive-expression = multiplicative-expression ,
-                      { ("melomo" | "flavuk") , multiplicative-expression } ;
-
-(* Умножение, деление, остаток *)
-multiplicative-expression = power-expression ,
-                            { ("dibotada" | "poopaye" | "pado") , power-expression } ;
-
-(* Унарные операторы: +, - *)
-unary-expression = power-expression
-                 | "melomo" , unary-expression
-                 | "flavuk" , unary-expression;
-
-(* Возведение в степень — правая ассоциативность *)
-power-expression = primary-expression , [ "beedo" , power-expression ] ;
-
-(* Первичные выражения *)
-primary-expression = number-literal
-                   | boolean-literal
-                   | string-literal
-                   | identifier
-                   | constant
-                   | "(" , expression , ")"
-                   | function-call ;
-
-(* Числовые литералы *)
-number-literal = integer-literal | float-literal ;
-integer-literal = [ "-" ] , digit , { digit } ;
-float-literal = [ "-" ] , digit , { digit } , "." , digit , { digit } ;
-
-(* Логические литералы *)
-boolean-literal = "da" | "no" ;
-
-(* Строковые литералы *)
-string-literal = "!" , { string-char } , "!" ;
-string-char = ? любой символ кроме "!" ? | "!!" | "\" , "n" ;
-
-(* Предопределённые константы *)
-constant = "bellopi" | "bananee" ;
-
-(* Вызов функции *)
-function-call = function-name , "(" , [ argument-list ] , ")" ;
-function-name = "muak" | "miniboss" | "bigboss" ;
-argument-list = expression , { "," , expression } ;
-
-(* Идентификаторы *)
-identifier = letter , { letter | digit | "_" } ;
-letter = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" |
-         "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" |
-         "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" |
-         "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" ;
-digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
-```

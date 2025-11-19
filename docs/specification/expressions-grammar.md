@@ -4,10 +4,10 @@
 
 Выражения в Minion# могут содержать:
 
-- **Числовые литералы**: целые (`42`, `-7`) и дробные (`3.14`, `-0.5`)
-- **Логические литералы**: `da` (истина), `no` (ложь)
-- **Строковые литералы**: `"Hello!"`, с интерполяцией через `loka`
-- **Переменные**: идентификаторы
+- **Числовые литералы**: десятичные числа с плавающей точкой
+Примеры: 42, -7, 3.14, -0.5, 0, 1.0
+(запись без точки допустима и означает число с нулевой дробной частью)
+- **Переменные и параметры функций**
 - **Операторы**:
   - Арифметические: `melomo` (+), `flavuk` (–), `dibotada` (*), `poopaye` (/), `pado` (%), `beedo` (^)
   - Сравнения: `con` (==), `nocon` (!=), `la` (<), `lacon` (<=), `looka too` (>), `looka too con` (>=)
@@ -121,25 +121,13 @@ power-expression = primary-expression , [ "beedo" , power-expression ] ;
 
 (* Первичные выражения *)
 primary-expression = number-literal
-                   | boolean-literal
-                   | string-literal
                    | identifier
                    | constant
                    | "(" , expression , ")"
                    | function-call ;
 
 (* Числовые литералы *)
-number-literal = integer-literal | float-literal ;
-integer-literal = [ "-" ] , digit , { digit } ;
-float-literal = [ "-" ] , digit , { digit } , "." , digit , { digit } ;
-
-(* Логические литералы *)
-boolean-literal = "da" | "no" ;
-
-(* Строковые литералы *)
-string-literal = "!" , { string-char } , "!" ;
-string-char = letter | digit | space-char | punctuation-char | "!!" | escape-sequence ;
-escape-sequence = "\" , "n" ;
+number-literal = [ "-" ] , digit , { digit } , "." , digit , { digit } ;
 
 (* Идентификаторы *)
 identifier = letter , { letter | digit | "_" } ;
@@ -149,16 +137,10 @@ letter = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" |
          "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" ;
 digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 
-space-char = " " ;
-punctuation-char = "." | "," | "?" | ":" | ";" | "-" | "_" | "'" | "(" | ")" |
-                   "[" | "]" | "{" | "}" | "/" | "\\" | "@" | "#" | "$" | "%" |
-                    "^" | "&" | "*" | "+" |"=" | "<" | ">" | "|" | "~" | "`" ;
-
 (* Константы *)
 constant = "belloPi" | "belloE" ;
 
 (* Вызов функции *)
-function-call = function-name , "(" , [ argument-list ] , ")" ;
-function-name = "muak" | "miniboss" | "bigboss" ;
+function-call = identifier , "(" , [ argument-list ] , ")" ;
 argument-list = expression , { "," , expression } ;
 ```

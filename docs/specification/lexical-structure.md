@@ -8,23 +8,15 @@
 ```minion
 bello!
 
-trusela name Spaghetti naidu!
-guoleila (name) naidu!
-tulalilloo ti amo ("Hello, " loka name loka "!") naidu!
-```
+trusela two Papaya 2.0 naidu!
 
-**C#**
-```csharp
-using System;
+boss square Papaya (x) oca!
+    tank yu x beedo two naidu!
+stopa
 
-class greeting
-{
-    static void Main()
-    {
-        string name = Console.ReadLine()!;
-        Console.WriteLine($"Hello, {name}!");
-    }
-}
+poop a Papaya naidu!
+guoleila (a) naidu!
+tulalilloo ti amo (square (a)) naidu!
 ```
 
 ---
@@ -35,35 +27,18 @@ class greeting
 ```minion
 bello!
 
-poop num Banana naidu!
-guoleila (num) naidu!
+trusela pi Papaya belloPi naidu!
 
-bi-do (con (pado num Banana 2) Banana 0) 
-oca!
-    tulalilloo ti amo ("Even") naidu!
+boss circle_area Papaya (r) oca!
+    tank yu pi dibotada (r beedo 2) naidu!
 stopa
-uh-oh 
-oca!
-    tulalilloo ti amo ("Odd") naidu!
-stopa
+
+poop radius Papaya naidu!
+guoleila (radius) naidu!
+tulalilloo ti amo (circle_area (radius)) naidu!
 ```
 
-**C#**
-```csharp
-using System;
 
-class evencheck
-{
-    static void Main()
-    {
-        int num = int.Parse(Console.ReadLine()!);
-        if (num % 2 == 0)
-            Console.WriteLine("Even");
-        else
-            Console.WriteLine("Odd");
-    }
-}
-```
 
 ---
 
@@ -73,37 +48,21 @@ class evencheck
 ```minion
 bello!
 
-tulalilloo ti amo ("Base?") naidu!
-poop base Banana naidu!
-guoleila (base) naidu!
+poop n Papaya naidu!
+guoleila (n) naidu!
 
-tulalilloo ti amo ("Exponent?") naidu!
-poop exp Banana naidu!
-guoleila (exp) naidu!
+poop sum Papaya naidu!
+sum lumai 0 naidu!
 
-poop result Banana naidu!
-result beedo (base Banana exp) naidu!
-tulalilloo ti amo ("Result: " loka result loka) naidu!
-```
+poop i Papaya naidu!
+i lumai 1 naidu!
 
-**C#**
-```csharp
-using System;
+kemari (i lacon n) oca!
+    sum lumai sum melomo i naidu!
+    i lumai i melomo 1 naidu!
+stopa
 
-class powercalc
-{
-    static void Main()
-    {
-        Console.WriteLine("Base?");
-        int baseVal = int.Parse(Console.ReadLine()!);
-        
-        Console.WriteLine("Exponent?");
-        int exp = int.Parse(Console.ReadLine()!);
-        
-        double result = Math.Pow(baseVal, exp);
-        Console.WriteLine($"Result: {result}");
-    }
-}
+tulalilloo ti amo (sum) naidu!
 ```
 
 ---
@@ -114,20 +73,19 @@ class powercalc
 | Слово                 | Назначение                                |
 |----------------------|--------------------------------------------|
 | `bello!`             | Начало программы                           |
+| `boss`             | Объявление пользовательской функции                         |
 | `oca!`               | Начало блока                               |
 | `stopa`              | Конец блока                                |
 | `bapple`             | Неизменяемая переменная (`readonly`)       |
 | `poop`               | Изменяемая переменная                      |
-|  `trusela`           | Константа времени компиляции (`const`)     |
+|  `trusela`           | Константа (`const`)     |
 | `bi-do`              | Условие `if`                               |
 | `uh-oh`              | Ветвь `else`                               |
 | `again`              | Цикл `for`                                 |
 | `kemari`             | Цикл `while`                               |
-| `aspetta`            | Оператор `continue`                        |
 | `tulalilloo ti amo`  | Вывод в консоль (`print`)                  |
 | `guoleila`           | Чтение из консоли (`input`)                |
 | `tank yu`            | Возврат значения (`return`)                |
-| `boo-ya`             | Выброс исключения (`throw`)                |
 | `naidu!`             | Завершение выражения (аналог `;`)          |
 
 ---
