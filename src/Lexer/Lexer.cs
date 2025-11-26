@@ -81,10 +81,11 @@ namespace Lexer
             if (Peek() == '!')
             {
                 string withBang = word + "!";
-                if (IsKeyword(withBang))
+                TokenType? keywordType = GetKeywordTokenType(withBang);
+                if (keywordType.HasValue)
                 {
-                    Advance(); // consume '!'
-                    _tokens.Add(new Token(TokenType.Keyword, withBang, start));
+                    Advance();
+                    _tokens.Add(new Token(keywordType.Value, withBang, start));
                     return;
                 }
             }
@@ -95,9 +96,10 @@ namespace Lexer
                 return;
             }
 
-            if (IsKeyword(word))
+            TokenType? keywordTokenType = GetKeywordTokenType(word);
+            if (keywordTokenType.HasValue)
             {
-                _tokens.Add(new Token(TokenType.Keyword, word, start));
+                _tokens.Add(new Token(keywordTokenType.Value, word, start));
                 return;
             }
 
@@ -115,6 +117,17 @@ namespace Lexer
             {
                 Advance();
                 while (!IsAtEnd() && char.IsDigit(Peek())) Advance();
+            }
+
+            // Проверка на ошибку: если после числа идет буква без пробела, это ошибка
+            if (!IsAtEnd() && char.IsLetter(Peek()))
+            {
+                // Читаем оставшуюся часть как ошибку
+                while (!IsAtEnd() && (char.IsLetterOrDigit(Peek()) || Peek() == '_' || Peek() == '-'))
+                    Advance();
+                string errorWord = _source[start.._position];
+                _tokens.Add(new Token(TokenType.Error, errorWord, start));
+                return;
             }
 
             _tokens.Add(new Token(TokenType.NumberLiteral, _source[start.._position], start));
@@ -232,23 +245,36 @@ namespace Lexer
 
         private bool IsAtEnd() => _position >= _source.Length;
 
-        private static bool IsKeyword(string word)
+        private static TokenType? GetKeywordTokenType(string word)
         {
-            ReadOnlySpan<string> keywords = new[]
+            return word switch
             {
-                "bello!", "oca!", "stopa", "bapple", "poop", "trusela",
-                "bi-do", "uh-oh", "again", "kemari", "aspetta",
-                "tulalilloo", "ti", "amo", "guoleila", "tank", "yu", "boo-ya", "naidu!",
-                "loka", "Da", "No", "da", "no",
+                "bello!" => TokenType.Bello,
+                "oca!" => TokenType.Oca,
+                "stopa" => TokenType.Stopa,
+                "bapple" => TokenType.Bapple,
+                "poop" => TokenType.Poop,
+                "trusela" => TokenType.Trusela,
+                "bi-do" => TokenType.BiDo,
+                "uh-oh" => TokenType.UhOh,
+                "again" => TokenType.Again,
+                "kemari" => TokenType.Kemari,
+                "aspetta" => TokenType.Aspetta,
+                "tulalilloo" => TokenType.Tulalilloo,
+                "ti" => TokenType.Ti,
+                "amo" => TokenType.Amo,
+                "guoleila" => TokenType.Guoleila,
+                "tank" => TokenType.Tank,
+                "yu" => TokenType.Yu,
+                "boo-ya" => TokenType.BooYa,
+                "naidu!" => TokenType.Naidu,
+                "loka" => TokenType.Loka,
+                "Da" => TokenType.Da,
+                "No" => TokenType.No,
+                "da" => TokenType.Da,
+                "no" => TokenType.No,
+                _ => null,
             };
-            foreach (string k in keywords)
-            {
-                if (string.Equals(k, word, StringComparison.Ordinal))
-                {
-                    return true;
-                }
-            }
-            return false;
         }
 
         private static bool IsOperator(string word)

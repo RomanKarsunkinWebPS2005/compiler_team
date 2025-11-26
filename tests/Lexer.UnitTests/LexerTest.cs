@@ -29,43 +29,43 @@ public class LexerTest
         {
             {
                 "bello!", [
-                    new Token(TokenType.Keyword, "bello!", 0)
+                    new Token(TokenType.Bello, "bello!", 0)
                 ]
             },
             {
                 "   bello!   ", [
-                    new Token(TokenType.Keyword, "bello!", 3)
+                    new Token(TokenType.Bello, "bello!", 3)
                 ]
             },
             {
                 "bello!\npoop x Banana naidu!", [
-                    new Token(TokenType.Keyword, "bello!", 0),
-                    new Token(TokenType.Keyword, "poop", 7),
+                    new Token(TokenType.Bello, "bello!", 0),
+                    new Token(TokenType.Poop, "poop", 7),
                     new Token(TokenType.Identifier, "x", 12),
                     new Token(TokenType.Identifier, "Banana", 14),
-                    new Token(TokenType.Keyword, "naidu!", 21)
+                    new Token(TokenType.Naidu, "naidu!", 21)
                 ]
             },
 
             {
                 "oca! stopa bi-do uh-oh again kemari aspetta poop bapple trusela tulalilloo ti amo guoleila tank yu boo-ya", [
-                    new Token(TokenType.Keyword, "oca!", 0),
-                    new Token(TokenType.Keyword, "stopa", 5),
-                    new Token(TokenType.Keyword, "bi-do", 11),
-                    new Token(TokenType.Keyword, "uh-oh", 17),
-                    new Token(TokenType.Keyword, "again", 23),
-                    new Token(TokenType.Keyword, "kemari", 29),
-                    new Token(TokenType.Keyword, "aspetta", 36),
-                    new Token(TokenType.Keyword, "poop", 44),
-                    new Token(TokenType.Keyword, "bapple", 49),
-                    new Token(TokenType.Keyword, "trusela", 56),
-                    new Token(TokenType.Keyword, "tulalilloo", 64),
-                    new Token(TokenType.Keyword, "ti", 75),
-                    new Token(TokenType.Keyword, "amo", 78),
-                    new Token(TokenType.Keyword, "guoleila", 82),
-                    new Token(TokenType.Keyword, "tank", 91),
-                    new Token(TokenType.Keyword, "yu", 96),
-                    new Token(TokenType.Keyword, "boo-ya", 99)
+                    new Token(TokenType.Oca, "oca!", 0),
+                    new Token(TokenType.Stopa, "stopa", 5),
+                    new Token(TokenType.BiDo, "bi-do", 11),
+                    new Token(TokenType.UhOh, "uh-oh", 17),
+                    new Token(TokenType.Again, "again", 23),
+                    new Token(TokenType.Kemari, "kemari", 29),
+                    new Token(TokenType.Aspetta, "aspetta", 36),
+                    new Token(TokenType.Poop, "poop", 44),
+                    new Token(TokenType.Bapple, "bapple", 49),
+                    new Token(TokenType.Trusela, "trusela", 56),
+                    new Token(TokenType.Tulalilloo, "tulalilloo", 64),
+                    new Token(TokenType.Ti, "ti", 75),
+                    new Token(TokenType.Amo, "amo", 78),
+                    new Token(TokenType.Guoleila, "guoleila", 82),
+                    new Token(TokenType.Tank, "tank", 91),
+                    new Token(TokenType.Yu, "yu", 96),
+                    new Token(TokenType.BooYa, "boo-ya", 99)
                 ]
             },
 
@@ -83,6 +83,9 @@ public class LexerTest
             { "Gelato", [ new Token(TokenType.Identifier, "Gelato", 0) ] },
             { "Spaghetti", [ new Token(TokenType.Identifier, "Spaghetti", 0) ] },
 
+            { "123abc", [ new Token(TokenType.Error, "123abc", 0) ] },
+            { "42test", [ new Token(TokenType.Error, "42test", 0) ] },
+
             { "42", [ new Token(TokenType.NumberLiteral, "42", 0) ] },
             { "-7", [ new Token(TokenType.NumberLiteral, "-7", 0) ] },
             { "3.14", [ new Token(TokenType.NumberLiteral, "3.14", 0) ] },
@@ -92,12 +95,12 @@ public class LexerTest
             { "!Line1\\nLine2!", [ new Token(TokenType.StringLiteral, "!Line1\\nLine2!", 0) ] },
 
             { "Da No", [
-                new Token(TokenType.Keyword, "Da", 0),
-                new Token(TokenType.Keyword, "No", 3)
+                new Token(TokenType.Da, "Da", 0),
+                new Token(TokenType.No, "No", 3)
             ] },
             { "da no", [
-                new Token(TokenType.Keyword, "da", 0),
-                new Token(TokenType.Keyword, "no", 3)
+                new Token(TokenType.Da, "da", 0),
+                new Token(TokenType.No, "no", 3)
             ] },
 
             { "x lumai 5", [
@@ -180,59 +183,59 @@ public class LexerTest
 
             { "\"Hello \" loka name loka \"!\"", [
                 new Token(TokenType.StringLiteral, "\"Hello \"", 0),
-                new Token(TokenType.Keyword, "loka", 9),
+                new Token(TokenType.Loka, "loka", 9),
                 new Token(TokenType.Identifier, "name", 14),
-                new Token(TokenType.Keyword, "loka", 19),
+                new Token(TokenType.Loka, "loka", 19),
                 new Token(TokenType.StringLiteral, "\"!\"", 24)
             ] },
 
             { "oca! stopa", [
-                new Token(TokenType.Keyword, "oca!", 0),
-                new Token(TokenType.Keyword, "stopa", 5)
+                new Token(TokenType.Oca, "oca!", 0),
+                new Token(TokenType.Stopa, "stopa", 5)
             ] },
 
             { "// banana!", [ new Token(TokenType.Comment, "// banana!", 0) ] },
             { "/* bello! */", [ new Token(TokenType.Comment, "/* bello! */", 0) ] },
 
             { "guoleila (name) naidu!", [
-                new Token(TokenType.Keyword, "guoleila", 0),
+                new Token(TokenType.Guoleila, "guoleila", 0),
                 new Token(TokenType.Delimiter, "(", 9),
                 new Token(TokenType.Identifier, "name", 10),
                 new Token(TokenType.Delimiter, ")", 14),
-                new Token(TokenType.Keyword, "naidu!", 16)
+                new Token(TokenType.Naidu, "naidu!", 16)
             ] },
             { "tulalilloo ti amo (!Hello!) naidu!", [
-                new Token(TokenType.Keyword, "tulalilloo", 0),
-                new Token(TokenType.Keyword, "ti", 11),
-                new Token(TokenType.Keyword, "amo", 14),
+                new Token(TokenType.Tulalilloo, "tulalilloo", 0),
+                new Token(TokenType.Ti, "ti", 11),
+                new Token(TokenType.Amo, "amo", 14),
                 new Token(TokenType.Delimiter, "(", 18),
                 new Token(TokenType.StringLiteral, "!Hello!", 19),
                 new Token(TokenType.Delimiter, ")", 26),
-                new Token(TokenType.Keyword, "naidu!", 28)
+                new Token(TokenType.Naidu, "naidu!", 28)
             ] },
             { "tulalilloo ti amo (!Hi, ! loka name loka !)", [
-                new Token(TokenType.Keyword, "tulalilloo", 0),
-                new Token(TokenType.Keyword, "ti", 11),
-                new Token(TokenType.Keyword, "amo", 14),
+                new Token(TokenType.Tulalilloo, "tulalilloo", 0),
+                new Token(TokenType.Ti, "ti", 11),
+                new Token(TokenType.Amo, "amo", 14),
                 new Token(TokenType.Delimiter, "(", 18),
                 new Token(TokenType.StringLiteral, "!Hi, !", 19),
-                new Token(TokenType.Keyword, "loka", 26),
+                new Token(TokenType.Loka, "loka", 26),
                 new Token(TokenType.Identifier, "name", 31),
-                new Token(TokenType.Keyword, "loka", 36),
+                new Token(TokenType.Loka, "loka", 36),
                 new Token(TokenType.StringLiteral, "!", 41),
                 new Token(TokenType.Delimiter, ")", 42)
             ] },
 
             { "tank yu result naidu!", [
-                new Token(TokenType.Keyword, "tank", 0),
-                new Token(TokenType.Keyword, "yu", 5),
+                new Token(TokenType.Tank, "tank", 0),
+                new Token(TokenType.Yu, "yu", 5),
                 new Token(TokenType.Identifier, "result", 8),
-                new Token(TokenType.Keyword, "naidu!", 15)
+                new Token(TokenType.Naidu, "naidu!", 15)
             ] },
             { "boo-ya Naletuna naidu!", [
-                new Token(TokenType.Keyword, "boo-ya", 0),
+                new Token(TokenType.BooYa, "boo-ya", 0),
                 new Token(TokenType.Identifier, "Naletuna", 7),
-                new Token(TokenType.Keyword, "naidu!", 16)
+                new Token(TokenType.Naidu, "naidu!", 16)
             ] },
 
             {
@@ -243,27 +246,27 @@ public class LexerTest
                 tulalilloo ti amo (!Hello, ! loka name loka !) naidu!
                 """,
                 [
-                    new Token(TokenType.Keyword, "bello!", 0),
-                    new Token(TokenType.Keyword, "poop", 7),
+                    new Token(TokenType.Bello, "bello!", 0),
+                    new Token(TokenType.Poop, "poop", 7),
                     new Token(TokenType.Identifier, "name", 12),
                     new Token(TokenType.Identifier, "Spaghetti", 17),
-                    new Token(TokenType.Keyword, "naidu!", 27),
-                    new Token(TokenType.Keyword, "guoleila", 34),
+                    new Token(TokenType.Naidu, "naidu!", 27),
+                    new Token(TokenType.Guoleila, "guoleila", 34),
                     new Token(TokenType.Delimiter, "(", 43),
                     new Token(TokenType.Identifier, "name", 44),
                     new Token(TokenType.Delimiter, ")", 48),
-                    new Token(TokenType.Keyword, "naidu!", 50),
-                    new Token(TokenType.Keyword, "tulalilloo", 57),
-                    new Token(TokenType.Keyword, "ti", 68),
-                    new Token(TokenType.Keyword, "amo", 71),
+                    new Token(TokenType.Naidu, "naidu!", 50),
+                    new Token(TokenType.Tulalilloo, "tulalilloo", 57),
+                    new Token(TokenType.Ti, "ti", 68),
+                    new Token(TokenType.Amo, "amo", 71),
                     new Token(TokenType.Delimiter, "(", 75),
                     new Token(TokenType.StringLiteral, "!Hello, !", 76),
-                    new Token(TokenType.Keyword, "loka", 86),
+                    new Token(TokenType.Loka, "loka", 86),
                     new Token(TokenType.Identifier, "name", 91),
-                    new Token(TokenType.Keyword, "loka", 96),
+                    new Token(TokenType.Loka, "loka", 96),
                     new Token(TokenType.StringLiteral, "!", 101),
                     new Token(TokenType.Delimiter, ")", 102),
-                    new Token(TokenType.Keyword, "naidu!", 104)
+                    new Token(TokenType.Naidu, "naidu!", 104)
                 ]
             },
         };

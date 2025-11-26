@@ -42,19 +42,33 @@ public static class LexicalStats
         {
             switch (token.Type)
             {
-                case TokenType.Keyword:
-                    if (string.Equals(token.Lexeme, "bello!", StringComparison.Ordinal))
-                    {
-                        break;
-                    }
-                    if (string.Equals(token.Lexeme, "loka", StringComparison.Ordinal))
-                    {
-                        stats.OtherLexemes++;
-                    }
-                    else
-                    {
-                        stats.Keywords++;
-                    }
+                case TokenType.Bello:
+                    // bello! не считается ключевым словом для статистики
+                    break;
+                case TokenType.Loka:
+                    stats.OtherLexemes++;
+                    break;
+                case TokenType.Oca:
+                case TokenType.Stopa:
+                case TokenType.Bapple:
+                case TokenType.Poop:
+                case TokenType.Trusela:
+                case TokenType.BiDo:
+                case TokenType.UhOh:
+                case TokenType.Again:
+                case TokenType.Kemari:
+                case TokenType.Aspetta:
+                case TokenType.Tulalilloo:
+                case TokenType.Ti:
+                case TokenType.Amo:
+                case TokenType.Guoleila:
+                case TokenType.Tank:
+                case TokenType.Yu:
+                case TokenType.BooYa:
+                case TokenType.Naidu:
+                case TokenType.Da:
+                case TokenType.No:
+                    stats.Keywords++;
                     break;
                 case TokenType.Identifier:
                     if (IsTypeName(token.Lexeme))
@@ -74,6 +88,9 @@ public static class LexicalStats
                     break;
                 case TokenType.Operator:
                     stats.Operators++;
+                    break;
+                case TokenType.Error:
+                    stats.OtherLexemes++;
                     break;
                 case TokenType.Whitespace:
                 case TokenType.Comment:
