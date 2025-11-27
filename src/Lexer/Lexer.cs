@@ -282,7 +282,7 @@ namespace Lexer
             ReadOnlySpan<string> ops = new[]
             {
                 "lumai", "beedo", "dibotada", "poopaye", "pado",
-                "melomo", "flavuk", "con", "looka", "too", "la",
+                "melomo", "flavuk", "con", "nocon", "looka", "too", "la",
                 "makoroni", "tropa", "bo-ca",
             };
             foreach (string o in ops)
