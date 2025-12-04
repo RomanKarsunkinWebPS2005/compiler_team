@@ -120,7 +120,7 @@ stopa
 
 
 ## Грамматика в нотации EBNF
-
+```ebnf
 (* Основная программа *)
 program = "bello!" , { top-level-item } ;
 
@@ -177,3 +177,4 @@ expression-statement = expression ;
 
 (* Блок кода *)
 block = "oca!" , { statement } , "stopa" ;
+```
