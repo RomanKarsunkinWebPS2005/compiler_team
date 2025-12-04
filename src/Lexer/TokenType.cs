@@ -11,6 +11,7 @@ public enum TokenType
     Whitespace,
     EndOfFile,
     Error,
+
     // Ключевые слова
     Bello,
     Oca,
@@ -35,5 +36,3 @@ public enum TokenType
     Da,
     No,
 }
-
-

@@ -5,10 +5,15 @@ namespace Lexer;
 public struct LexicalData
 {
     public int Keywords { get; set; }
+
     public int Identifiers { get; set; }
+
     public int NumberLiterals { get; set; }
+
     public int StringLiterals { get; set; }
+
     public int Operators { get; set; }
+
     public int OtherLexemes { get; set; }
 
     public override readonly string ToString()
@@ -29,7 +34,9 @@ public static class LexicalStats
     public static string CollectFromFile(string path)
     {
         if (!File.Exists(path))
+        {
             throw new FileNotFoundException("Файл не найден", path);
+        }
 
         string text = File.ReadAllText(path, Encoding.UTF8);
         Lexer lexer = new Lexer(text);
@@ -79,6 +86,7 @@ public static class LexicalStats
                     {
                         stats.Identifiers++;
                     }
+
                     break;
                 case TokenType.NumberLiteral:
                     stats.NumberLiterals++;
@@ -112,5 +120,3 @@ public static class LexicalStats
             || string.Equals(lexeme, "Spaghetti", StringComparison.Ordinal);
     }
 }
-
-
