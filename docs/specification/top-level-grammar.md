@@ -43,6 +43,7 @@ stopa
 - **Ввод-вывод** осуществляется через специальные инструкции:
   - `guoleila (variable)` — чтение из консоли
   - `tulalilloo ti amo (expression)` — вывод в консоль
+  
 
 ## Семантические правила
 
@@ -118,6 +119,15 @@ stopa
   ```
   → Сначала будет выполнен **первый** `guoleila()`, затем **второй**.
 
+### Short-circuit evaluation:
+- a tropa b: если a == 0.0, то b не вычисляется
+- a bo-ca b: если a != 0.0, то b не вычисляется
+
+### Тернарный оператор:
+- Вычисляется condition
+- Если condition != 0.0 → вычисляется и возвращается true_expr
+- Иначе → вычисляется и возвращается false_expr
+Правоассоциативный: a ? b ! c ? d ! e = a ? b ! (c ? d ! e)
 
 ## Грамматика в нотации EBNF
 ```ebnf
@@ -147,6 +157,7 @@ statement = variable-declaration
           | output-statement
           | if-statement
           | while-statement
+          | for-statement
           | return-statement
           | expression-statement
           , "naidu!" ;
@@ -168,6 +179,9 @@ if-statement = "bi-do" , "(" , expression , ")" , block , [ "uh-oh" , block ] ;
 
 (* Цикл while *)
 while-statement = "kemari" , "(" , expression , ")" , block ;
+
+(* Цикл for *)
+for-statement = "again" , "(" , identifier , "=" , expression , "to" , expression , ")" , block ;
 
 (* Возврат из функции *)
 return-statement = "tank yu" , expression ;

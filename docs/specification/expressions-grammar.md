@@ -90,11 +90,17 @@
 (* Основное выражение *)
 expression = logical-or-expression ;
 
+(* Тернарный условный оператор *)
+conditional-expression = logical-or-expression , [ "?" , expression , "!" , expression ] ;
+
 (* Логическое ИЛИ *)
 logical-or-expression = logical-and-expression , { "bo-ca" , logical-and-expression } ;
 
 (* Логическое И *)
-logical-and-expression = equality-expression , { "tropa" , equality-expression } ;
+logical-and-expression = logical-no-expression , { "tropa" , logical-no-expression } ;
+
+(*Логическое НЕ*)
+logical-no-expression = equality-expression , { "macoroni" , logical-no-expression } ;
 
 (* Равенство и неравенство *)
 equality-expression = relational-expression , { ("con" | "nocon") , relational-expression } ;
