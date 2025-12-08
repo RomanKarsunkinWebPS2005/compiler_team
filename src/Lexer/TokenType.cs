@@ -1,4 +1,4 @@
-﻿namespace Lexer;
+namespace Lexer;
 
 public enum TokenType
 {
@@ -19,6 +19,7 @@ public enum TokenType
     Bapple,
     Poop,
     Trusela,
+    Boss,
     BiDo,
     UhOh,
     Again,

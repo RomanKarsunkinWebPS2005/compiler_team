@@ -6,9 +6,6 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
 	<_SkipUpgradeNetAnalyzersNuGetWarning>true</_SkipUpgradeNetAnalyzersNuGetWarning>
-	<EnableNETAnalyzers>false</EnableNETAnalyzers>
-	<NoWarn>$(NoWarn);SA1129;SA1503;SA1518;SA1313;SA1028;SA1309;SA1214;SA1201;SA1501</NoWarn>
-	<AnalysisMode>None</AnalysisMode>
   </PropertyGroup>
 
   <ItemGroup>

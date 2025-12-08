@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,14 +6,14 @@ namespace Lexer
 {
     public class Lexer
     {
-        private readonly string _source;
-        private int _position;
-        private readonly List<Token> _tokens = new();
+        private readonly string source;
+        private readonly List<Token> tokens = new();
+        private int position;
 
         public Lexer(string source)
         {
-            _source = (source ?? string.Empty).Replace("\r\n", "\n").Replace('\r', '\n');
-            _position = 0;
+            this.source = (source ?? string.Empty).Replace("\r\n", "\n").Replace('\r', '\n');
+            position = 0;
         }
 
         public IReadOnlyList<Token> Tokenize()
@@ -63,29 +63,29 @@ namespace Lexer
                 }
             }
 
-            return _tokens;
+            return tokens;
         }
 
         private void ReadWhitespace()
         {
-            int start = _position;
+            int start = position;
             while (!IsAtEnd() && char.IsWhiteSpace(Peek()))
-            { 
-                Advance(); 
+            {
+                Advance();
             }
 
-            _tokens.Add(new Token(TokenType.Whitespace, _source[start.._position], start));
+            tokens.Add(new Token(TokenType.Whitespace, source[start..position], start));
         }
 
         private void ReadWordLike()
         {
-            int start = _position;
+            int start = position;
             while (!IsAtEnd() && (char.IsLetterOrDigit(Peek()) || Peek() == '_' || Peek() == '-'))
             {
                 Advance();
             }
 
-            string word = _source[start.._position];
+            string word = source[start..position];
 
             if (Peek() == '!')
             {
@@ -94,33 +94,33 @@ namespace Lexer
                 if (keywordType.HasValue)
                 {
                     Advance();
-                    _tokens.Add(new Token(keywordType.Value, withBang, start));
+                    tokens.Add(new Token(keywordType.Value, withBang, start));
                     return;
                 }
             }
 
             if (IsOperator(word))
             {
-                _tokens.Add(new Token(TokenType.Operator, word, start));
+                tokens.Add(new Token(TokenType.Operator, word, start));
                 return;
             }
 
             TokenType? keywordTokenType = GetKeywordTokenType(word);
             if (keywordTokenType.HasValue)
             {
-                _tokens.Add(new Token(keywordTokenType.Value, word, start));
+                tokens.Add(new Token(keywordTokenType.Value, word, start));
                 return;
             }
 
-            _tokens.Add(new Token(TokenType.Identifier, word, start));
+            tokens.Add(new Token(TokenType.Identifier, word, start));
         }
 
         private void ReadNumber()
         {
-            int start = _position;
+            int start = position;
             if (Peek() == '-')
-            { 
-                Advance(); 
+            {
+                Advance();
             }
 
             while (!IsAtEnd() && char.IsDigit(Peek()))
@@ -146,23 +146,23 @@ namespace Lexer
                     Advance();
                 }
 
-                string errorWord = _source[start.._position];
-                _tokens.Add(new Token(TokenType.Error, errorWord, start));
+                string errorWord = source[start..position];
+                tokens.Add(new Token(TokenType.Error, errorWord, start));
                 return;
             }
 
-            _tokens.Add(new Token(TokenType.NumberLiteral, _source[start.._position], start));
+            tokens.Add(new Token(TokenType.NumberLiteral, source[start..position], start));
         }
 
         private void ReadBangString()
         {
-            int start = _position;
+            int start = position;
             Advance();
 
             if (Peek() == ')')
             {
-                string single = _source.Substring(start, 1);
-                _tokens.Add(new Token(TokenType.StringLiteral, single, start));
+                string single = source.Substring(start, 1);
+                tokens.Add(new Token(TokenType.StringLiteral, single, start));
                 return;
             }
 
@@ -187,13 +187,13 @@ namespace Lexer
                 Advance();
             }
 
-            string lexeme = _source[start.._position];
-            _tokens.Add(new Token(TokenType.StringLiteral, lexeme, start));
+            string lexeme = source[start..position];
+            tokens.Add(new Token(TokenType.StringLiteral, lexeme, start));
         }
 
         private void ReadQuotedString()
         {
-            int start = _position;
+            int start = position;
             StringBuilder sb = new StringBuilder();
             sb.Append('"');
             Advance();
@@ -211,58 +211,58 @@ namespace Lexer
                 Advance();
             }
 
-            _tokens.Add(new Token(TokenType.StringLiteral, sb.ToString(), start));
+            tokens.Add(new Token(TokenType.StringLiteral, sb.ToString(), start));
         }
 
         private void ReadSingleLineComment()
         {
-            int start = _position;
+            int start = position;
             Advance(2);
             while (!IsAtEnd() && Peek() != '\n')
             {
                 Advance();
             }
 
-            _tokens.Add(new Token(TokenType.Comment, "//" + _source[(start + 2).._position], start));
+            tokens.Add(new Token(TokenType.Comment, "//" + source[(start + 2)..position], start));
         }
 
         private void ReadMultiLineComment()
         {
-            int start = _position;
+            int start = position;
             Advance(2);
             while (!IsAtEnd() && !(Peek() == '*' && Peek(1) == '/'))
             {
                 Advance();
             }
 
-            if (!IsAtEnd()) 
-            { 
-                Advance(2); 
+            if (!IsAtEnd())
+            {
+                Advance(2);
             }
 
-            string text = _source[start.._position];
-            _tokens.Add(new Token(TokenType.Comment, text, start));
+            string text = source[start..position];
+            tokens.Add(new Token(TokenType.Comment, text, start));
         }
 
         private void ReadDelimiterOrSymbol()
         {
-            int pos = _position;
+            int pos = position;
             char c = Peek();
             if (c == '(' || c == ')')
             {
                 Advance();
-                _tokens.Add(new Token(TokenType.Delimiter, c.ToString(), pos));
+                tokens.Add(new Token(TokenType.Delimiter, c.ToString(), pos));
                 return;
             }
 
-            int start = _position;
+            int start = position;
             while (!IsAtEnd() && !char.IsLetterOrDigit(Peek()) && !char.IsWhiteSpace(Peek()))
             {
                 Advance();
             }
 
-            string sym = _source[start.._position];
-            _tokens.Add(new Token(TokenType.Delimiter, sym, start));
+            string sym = source[start..position];
+            tokens.Add(new Token(TokenType.Delimiter, sym, start));
         }
 
         private bool IsStartOfSingleLineComment() => Peek() == '/' && Peek(1) == '/';
@@ -271,16 +271,16 @@ namespace Lexer
 
         private char Peek(int offset = 0)
         {
-            int idx = _position + offset;
-            return idx < _source.Length ? _source[idx] : '\0';
+            int idx = position + offset;
+            return idx < source.Length ? source[idx] : '\0';
         }
 
         private void Advance(int count = 1)
         {
-            _position = Math.Min(_position + count, _source.Length);
+            position = Math.Min(position + count, source.Length);
         }
 
-        private bool IsAtEnd() => _position >= _source.Length;
+        private bool IsAtEnd() => position >= source.Length;
 
         private static TokenType? GetKeywordTokenType(string word)
         {
@@ -303,6 +303,7 @@ namespace Lexer
                 "guoleila" => TokenType.Guoleila,
                 "tank" => TokenType.Tank,
                 "yu" => TokenType.Yu,
+                "boss" => TokenType.Boss,
                 "boo-ya" => TokenType.BooYa,
                 "naidu!" => TokenType.Naidu,
                 "loka" => TokenType.Loka,

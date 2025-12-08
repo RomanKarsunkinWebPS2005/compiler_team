@@ -42,7 +42,7 @@ public static class LexicalStats
         Lexer lexer = new Lexer(text);
         IReadOnlyList<Token> tokens = lexer.Tokenize();
 
-        LexicalData stats = new LexicalData();
+        LexicalData stats = default;
         HashSet<string> seenIdentifiers = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (Token token in tokens)
