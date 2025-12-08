@@ -26,7 +26,10 @@ namespace Lexer
                     continue;
                 }
 
-                if (IsAtEnd()) break;
+                if (IsAtEnd())
+                {
+                    break;
+                }
 
                 char c = Peek();
 
@@ -66,7 +69,11 @@ namespace Lexer
         private void ReadWhitespace()
         {
             int start = position;
-            while (!IsAtEnd() && char.IsWhiteSpace(Peek())) Advance();
+            while (!IsAtEnd() && char.IsWhiteSpace(Peek()))
+            {
+                Advance();
+            }
+
             tokens.Add(new Token(TokenType.Whitespace, source[start..position], start));
         }
 
@@ -74,7 +81,9 @@ namespace Lexer
         {
             int start = position;
             while (!IsAtEnd() && (char.IsLetterOrDigit(Peek()) || Peek() == '_' || Peek() == '-'))
+            {
                 Advance();
+            }
 
             string word = source[start..position];
 
@@ -109,14 +118,23 @@ namespace Lexer
         private void ReadNumber()
         {
             int start = position;
-            if (Peek() == '-') Advance();
+            if (Peek() == '-')
+            {
+                Advance();
+            }
 
-            while (!IsAtEnd() && char.IsDigit(Peek())) Advance();
+            while (!IsAtEnd() && char.IsDigit(Peek()))
+            {
+                Advance();
+            }
 
             if (!IsAtEnd() && Peek() == '.' && char.IsDigit(Peek(1)))
             {
                 Advance();
-                while (!IsAtEnd() && char.IsDigit(Peek())) Advance();
+                while (!IsAtEnd() && char.IsDigit(Peek()))
+                {
+                    Advance();
+                }
             }
 
             // Проверка на ошибку: если после числа идет буква без пробела, это ошибка
@@ -124,7 +142,10 @@ namespace Lexer
             {
                 // Читаем оставшуюся часть как ошибку
                 while (!IsAtEnd() && (char.IsLetterOrDigit(Peek()) || Peek() == '_' || Peek() == '-'))
+                {
                     Advance();
+                }
+
                 string errorWord = source[start..position];
                 tokens.Add(new Token(TokenType.Error, errorWord, start));
                 return;
@@ -152,10 +173,12 @@ namespace Lexer
                     Advance(2);
                     continue;
                 }
+
                 if (Peek() == '!')
                 {
                     break;
                 }
+
                 Advance();
             }
 
@@ -195,7 +218,11 @@ namespace Lexer
         {
             int start = position;
             Advance(2);
-            while (!IsAtEnd() && Peek() != '\n') Advance();
+            while (!IsAtEnd() && Peek() != '\n')
+            {
+                Advance();
+            }
+
             tokens.Add(new Token(TokenType.Comment, "//" + source[(start + 2)..position], start));
         }
 
@@ -203,8 +230,16 @@ namespace Lexer
         {
             int start = position;
             Advance(2);
-            while (!IsAtEnd() && !(Peek() == '*' && Peek(1) == '/')) Advance();
-            if (!IsAtEnd()) Advance(2);
+            while (!IsAtEnd() && !(Peek() == '*' && Peek(1) == '/'))
+            {
+                Advance();
+            }
+
+            if (!IsAtEnd())
+            {
+                Advance(2);
+            }
+
             string text = source[start..position];
             tokens.Add(new Token(TokenType.Comment, text, start));
         }
@@ -225,6 +260,7 @@ namespace Lexer
             {
                 Advance();
             }
+
             string sym = source[start..position];
             tokens.Add(new Token(TokenType.Delimiter, sym, start));
         }

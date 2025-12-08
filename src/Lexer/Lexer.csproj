@@ -5,8 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<_SkipUpgradeNetAnalyzersNuGetWarning>true</_SkipUpgradeNetAnalyzersNuGetWarning>
-	<EnableNETAnalyzers>false</EnableNETAnalyzers>
-	<AnalysisMode>None</AnalysisMode>
   </PropertyGroup>
 
 </Project>

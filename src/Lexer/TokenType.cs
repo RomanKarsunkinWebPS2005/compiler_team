@@ -1,4 +1,4 @@
-﻿namespace Lexer;
+namespace Lexer;
 
 public enum TokenType
 {
@@ -11,6 +11,7 @@ public enum TokenType
     Whitespace,
     EndOfFile,
     Error,
+
     // Ключевые слова
     Bello,
     Oca,

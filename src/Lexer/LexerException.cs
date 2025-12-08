@@ -10,6 +10,20 @@ namespace Lexer
             Position = position;
         }
 
+        public LexerException()
+        {
+        }
+
+        public LexerException(string message)
+            : base(message)
+        {
+        }
+
+        public LexerException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+        }
+
         public int Position { get; }
     }
 }
