@@ -86,6 +86,7 @@ public static class LexicalStats
                     {
                         stats.Identifiers++;
                     }
+
                     break;
                 case TokenType.NumberLiteral:
                     stats.NumberLiterals++;

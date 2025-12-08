@@ -518,8 +518,8 @@ public class LexerTest
                 string literals: 1
                 operators: 1
                 other lexemes: 5
-                """,
-            }
+                """
+            },
         };
     }
 

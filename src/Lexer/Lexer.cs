@@ -266,6 +266,7 @@ namespace Lexer
         }
 
         private bool IsStartOfSingleLineComment() => Peek() == '/' && Peek(1) == '/';
+
         private bool IsStartOfMultiLineComment() => Peek() == '/' && Peek(1) == '*';
 
         private char Peek(int offset = 0)
@@ -328,6 +329,7 @@ namespace Lexer
                     return true;
                 }
             }
+
             return false;
         }
     }
