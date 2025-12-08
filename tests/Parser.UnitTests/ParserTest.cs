@@ -3,9 +3,6 @@ using Xunit;
 
 namespace Parser.UnitTests;
 
-/// <summary>
-/// Тесты для парсера выражений языка Minion#.
-/// </summary>
 public class ParserTest
 {
     [Theory]

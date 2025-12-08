@@ -9,8 +9,8 @@ namespace Parser;
 /// </summary>
 public class Parser
 {
-    private readonly TokenStream _tokenStream;
-    private readonly Dictionary<string, decimal> _variables;
+    private readonly TokenStream tokenStream;
+    private readonly Dictionary<string, decimal> variables;
 
     /// <summary>
     /// Инициализирует новый экземпляр класса <see cref="Parser"/>.
@@ -19,8 +19,8 @@ public class Parser
     /// <param name="variables">Словарь значений переменных (опционально).</param>
     public Parser(TokenStream tokenStream, Dictionary<string, decimal>? variables = null)
     {
-        _tokenStream = tokenStream ?? throw new ArgumentNullException(nameof(tokenStream));
-        _variables = variables ?? new Dictionary<string, decimal>();
+        this.tokenStream = tokenStream ?? throw new ArgumentNullException(nameof(tokenStream));
+        this.variables = variables ?? new Dictionary<string, decimal>();
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public class Parser
 
         while (IsOperator("bo-ca"))
         {
-            _tokenStream.Advance();
+            tokenStream.Advance();
             decimal right = ParseLogicalAndExpression();
             left = (left != 0 || right != 0) ? 1 : 0;
         }
@@ -85,7 +85,7 @@ public class Parser
 
         while (IsOperator("tropa"))
         {
-            _tokenStream.Advance();
+            tokenStream.Advance();
             decimal right = ParseLogicalNotExpression();
             left = (left != 0 && right != 0) ? 1 : 0;
         }
@@ -103,7 +103,7 @@ public class Parser
     {
         if (IsOperator("makoroni"))
         {
-            _tokenStream.Advance();
+            tokenStream.Advance();
             decimal value = ParseLogicalNotExpression();
             return value == 0 ? 1 : 0;
         }
@@ -122,8 +122,8 @@ public class Parser
 
         while (IsOperator("con") || IsOperator("nocon"))
         {
-            string op = _tokenStream.Peek().Lexeme;
-            _tokenStream.Advance();
+            string op = tokenStream.Peek().Lexeme;
+            tokenStream.Advance();
             decimal right = ParseRelationalExpression();
 
             bool result = op == "con" ? left == right : left != right;
@@ -145,8 +145,8 @@ public class Parser
 
         while (IsOperator("la") || IsOperator("looka"))
         {
-            string op = _tokenStream.Peek().Lexeme;
-            _tokenStream.Advance();
+            string op = tokenStream.Peek().Lexeme;
+            tokenStream.Advance();
 
             bool hasCon = false;
 
@@ -155,7 +155,7 @@ public class Parser
             {
                 if (IsOperator("con"))
                 {
-                    _tokenStream.Advance();
+                    tokenStream.Advance();
                     hasCon = true;
                 }
             }
@@ -168,12 +168,12 @@ public class Parser
                     throw new InvalidOperationException("После 'looka' ожидалось 'too'");
                 }
 
-                _tokenStream.Advance();
+                tokenStream.Advance();
                 op = "looka too";
 
                 if (IsOperator("con"))
                 {
-                    _tokenStream.Advance();
+                    tokenStream.Advance();
                     hasCon = true;
                 }
             }
@@ -207,8 +207,8 @@ public class Parser
 
         while (IsOperator("melomo") || IsOperator("flavuk"))
         {
-            string op = _tokenStream.Peek().Lexeme;
-            _tokenStream.Advance();
+            string op = tokenStream.Peek().Lexeme;
+            tokenStream.Advance();
 
             // Проверка на ошибку: два бинарных оператора подряд
             if (IsOperator("melomo") || IsOperator("flavuk"))
@@ -236,8 +236,8 @@ public class Parser
 
         while (IsOperator("dibotada") || IsOperator("poopaye") || IsOperator("pado"))
         {
-            string op = _tokenStream.Peek().Lexeme;
-            _tokenStream.Advance();
+            string op = tokenStream.Peek().Lexeme;
+            tokenStream.Advance();
             decimal right = ParseUnaryExpression();
 
             left = op switch
@@ -263,13 +263,13 @@ public class Parser
     {
         if (IsOperator("melomo"))
         {
-            _tokenStream.Advance();
+            tokenStream.Advance();
             return ParseUnaryExpression();
         }
 
         if (IsOperator("flavuk"))
         {
-            _tokenStream.Advance();
+            tokenStream.Advance();
             return -ParseUnaryExpression();
         }
 
@@ -287,7 +287,7 @@ public class Parser
 
         if (IsOperator("beedo"))
         {
-            _tokenStream.Advance();
+            tokenStream.Advance();
             decimal right = ParsePowerExpression();
             return (decimal)Math.Pow((double)left, (double)right);
         }
@@ -306,39 +306,39 @@ public class Parser
     /// </summary>
     private decimal ParsePrimaryExpression()
     {
-        Token token = _tokenStream.Peek();
+        Token token = tokenStream.Peek();
 
         // Числовой литерал
         if (token.Type == TokenType.NumberLiteral)
         {
-            _tokenStream.Advance();
+            tokenStream.Advance();
             return decimal.Parse(token.Lexeme, CultureInfo.InvariantCulture);
         }
 
         // Логические литералы
         if (token.Type == TokenType.Da)
         {
-            _tokenStream.Advance();
+            tokenStream.Advance();
             return 1;
         }
 
         if (token.Type == TokenType.No)
         {
-            _tokenStream.Advance();
+            tokenStream.Advance();
             return 0;
         }
 
         // Строковые литералы (пока не поддерживаем вычисление)
         if (token.Type == TokenType.StringLiteral)
         {
-            _tokenStream.Advance();
+            tokenStream.Advance();
             throw new NotImplementedException("Вычисление строковых литералов не реализовано");
         }
 
         // Идентификатор или константа
         if (token.Type == TokenType.Identifier)
         {
-            _tokenStream.Advance();
+            tokenStream.Advance();
             string name = token.Lexeme;
 
             // Проверяем, является ли это константой
@@ -353,13 +353,13 @@ public class Parser
             }
 
             // Проверяем, является ли это вызовом функции
-            if (_tokenStream.Peek().Type == TokenType.Delimiter && _tokenStream.Peek().Lexeme == "(")
+            if (tokenStream.Peek().Type == TokenType.Delimiter && tokenStream.Peek().Lexeme == "(")
             {
                 return ParseFunctionCall(name);
             }
 
             // Иначе это переменная
-            if (_variables.TryGetValue(name, out decimal value))
+            if (variables.TryGetValue(name, out decimal value))
             {
                 return value;
             }
@@ -370,15 +370,15 @@ public class Parser
         // Скобки
         if (token.Type == TokenType.Delimiter && token.Lexeme == "(")
         {
-            _tokenStream.Advance();
+            tokenStream.Advance();
             decimal result = ParseExpression();
 
-            if (_tokenStream.Peek().Type != TokenType.Delimiter || _tokenStream.Peek().Lexeme != ")")
+            if (tokenStream.Peek().Type != TokenType.Delimiter || tokenStream.Peek().Lexeme != ")")
             {
                 throw new InvalidOperationException("Ожидалась закрывающая скобка ')'");
             }
 
-            _tokenStream.Advance();
+            tokenStream.Advance();
             return result;
         }
 
@@ -394,19 +394,19 @@ public class Parser
     private decimal ParseFunctionCall(string functionName)
     {
         // Уже прочитали идентификатор и открывающую скобку
-        if (_tokenStream.Peek().Type != TokenType.Delimiter || _tokenStream.Peek().Lexeme != "(")
+        if (tokenStream.Peek().Type != TokenType.Delimiter || tokenStream.Peek().Lexeme != "(")
         {
             throw new InvalidOperationException("Ожидалась открывающая скобка '('");
         }
 
-        _tokenStream.Advance();
+        tokenStream.Advance();
 
         List<decimal> arguments = new List<decimal>();
 
         // Если сразу закрывающая скобка, то аргументов нет
-        if (_tokenStream.Peek().Type == TokenType.Delimiter && _tokenStream.Peek().Lexeme == ")")
+        if (tokenStream.Peek().Type == TokenType.Delimiter && tokenStream.Peek().Lexeme == ")")
         {
-            _tokenStream.Advance();
+            tokenStream.Advance();
             return BuiltinFunctions.Invoke(functionName, arguments);
         }
 
@@ -414,19 +414,19 @@ public class Parser
         arguments.Add(ParseExpression());
 
         // Читаем остальные аргументы
-        while (_tokenStream.Peek().Type == TokenType.Delimiter && _tokenStream.Peek().Lexeme == ",")
+        while (tokenStream.Peek().Type == TokenType.Delimiter && tokenStream.Peek().Lexeme == ",")
         {
-            _tokenStream.Advance();
+            tokenStream.Advance();
             arguments.Add(ParseExpression());
         }
 
         // Закрывающая скобка
-        if (_tokenStream.Peek().Type != TokenType.Delimiter || _tokenStream.Peek().Lexeme != ")")
+        if (tokenStream.Peek().Type != TokenType.Delimiter || tokenStream.Peek().Lexeme != ")")
         {
             throw new InvalidOperationException("Ожидалась закрывающая скобка ')' или запятая ','");
         }
 
-        _tokenStream.Advance();
+        tokenStream.Advance();
         return BuiltinFunctions.Invoke(functionName, arguments);
     }
 
@@ -435,7 +435,7 @@ public class Parser
     /// </summary>
     private bool IsOperator(string operatorName)
     {
-        Token token = _tokenStream.Peek();
+        Token token = tokenStream.Peek();
         return token.Type == TokenType.Operator && token.Lexeme == operatorName;
     }
 }

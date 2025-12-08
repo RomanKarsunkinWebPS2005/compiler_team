@@ -35,5 +35,3 @@ public enum TokenType
     Da,
     No,
 }
-
-
