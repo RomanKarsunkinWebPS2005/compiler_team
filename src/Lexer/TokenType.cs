@@ -19,6 +19,7 @@ public enum TokenType
     Bapple,
     Poop,
     Trusela,
+    Boss,
     BiDo,
     UhOh,
     Again,

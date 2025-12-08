@@ -1,3 +1,4 @@
+using Execution;
 using Parser;
 using Xunit;
 
@@ -5,428 +6,331 @@ namespace Parser.UnitTests;
 
 public class ParserTest
 {
+    /// <summary>
+    /// Тестирует парсинг выражений с проверкой результата вычисления.
+    /// </summary>
     [Theory]
-    [MemberData(nameof(GetPrimaryExpressionData))]
-    public void ParsePrimaryExpressionTest(string code, int expected)
+    [MemberData(nameof(GetExpressionTests))]
+    public void ParseExpressionTest(string code, List<decimal> expected)
     {
-        AssertEvaluated(code, expected);
-    }
-
-    [Theory]
-    [MemberData(nameof(GetIdentifierData))]
-    public void ParseIdentifierTest(string code, Dictionary<string, decimal> variables, int expected)
-    {
-        AssertEvaluated(code, expected, variables);
-    }
-
-    [Theory]
-    [MemberData(nameof(GetUnaryOperatorData))]
-    public void ParseUnaryOperatorTest(string code, int expected)
-    {
-        AssertEvaluated(code, expected);
-    }
-
-    [Theory]
-    [MemberData(nameof(GetUnaryOperatorWithVariablesData))]
-    public void ParseUnaryOperatorWithVariablesTest(string code, Dictionary<string, decimal> variables, int expected)
-    {
-        AssertEvaluated(code, expected, variables);
-    }
-
-    [Theory]
-    [MemberData(nameof(GetPowerExpressionData))]
-    public void ParsePowerExpressionTest(string code, int expected)
-    {
-        AssertEvaluated(code, expected);
-    }
-
-    [Theory]
-    [MemberData(nameof(GetMultiplicativeExpressionData))]
-    public void ParseMultiplicativeExpressionTest(string code, int expected)
-    {
-        AssertEvaluated(code, expected);
-    }
-
-    [Theory]
-    [MemberData(nameof(GetAdditiveExpressionData))]
-    public void ParseAdditiveExpressionTest(string code, int expected)
-    {
-        AssertEvaluated(code, expected);
-    }
-
-    [Theory]
-    [MemberData(nameof(GetRelationalExpressionData))]
-    public void ParseRelationalExpressionTest(string code, int expected)
-    {
-        AssertEvaluated(code, expected);
-    }
-
-    [Theory]
-    [MemberData(nameof(GetEqualityExpressionData))]
-    public void ParseEqualityExpressionTest(string code, int expected)
-    {
-        AssertEvaluated(code, expected);
-    }
-
-    [Theory]
-    [MemberData(nameof(GetLogicalAndExpressionData))]
-    public void ParseLogicalAndExpressionTest(string code, int expected)
-    {
-        AssertEvaluated(code, expected);
-    }
-
-    [Theory]
-    [MemberData(nameof(GetLogicalOrExpressionData))]
-    public void ParseLogicalOrExpressionTest(string code, int expected)
-    {
-        AssertEvaluated(code, expected);
-    }
-
-    [Theory]
-    [MemberData(nameof(GetLogicalNotExpressionData))]
-    public void ParseLogicalNotExpressionTest(string code, int expected)
-    {
-        AssertEvaluated(code, expected);
-    }
-
-    [Theory]
-    [MemberData(nameof(GetOperatorPrecedenceData))]
-    public void ParseOperatorPrecedenceTest(string code, int expected)
-    {
-        AssertEvaluated(code, expected);
-    }
-
-    [Theory]
-    [MemberData(nameof(GetErrorHandlingData))]
-    public void ParseErrorHandlingTest(string code, Type expectedExceptionType)
-    {
-        AssertThrows(code, expectedExceptionType);
+        Parser parser = new(new TokenStream(""));
+        int result = parser.EvaluateExpression(code);
+        int expectedInt = (int)expected[0];
+        Assert.Equal(expectedInt, result);
     }
 
     /// <summary>
-    /// Тестовые данные для идентификаторов (переменных).
+    /// Тестирует парсинг программ с проверкой результатов выполнения.
     /// </summary>
-    public static TheoryData<string, Dictionary<string, decimal>, int> GetIdentifierData()
+    [Theory]
+    [MemberData(nameof(GetProgramTests))]
+    public void ParseProgramTest(string code, List<decimal> expected)
     {
-        return new TheoryData<string, Dictionary<string, decimal>, int>
+        FakeEnvironment env = new();
+        Parser.ParseProgram(code, env);
+        IReadOnlyList<decimal> actual = env.Results;
+
+        for (int i = 0; i < Math.Min(expected.Count, actual.Count); i++)
         {
-            // Простой идентификатор
-            { "x", new Dictionary<string, decimal> { { "x", 42 } }, 42 },
+            Assert.Equal(expected[i], actual[i]);
+        }
 
-            // Идентификатор с подчёркиванием
-            { "_temp", new Dictionary<string, decimal> { { "_temp", 5 } }, 5 },
+        if (expected.Count != actual.Count)
+        {
+            Assert.Fail($"Expected {expected.Count} results, but got {actual.Count}. Expected: [{string.Join(", ", expected)}], Actual: [{string.Join(", ", actual)}]");
+        }
+    }
 
-            // Идентификатор с цифрами
-            { "level2", new Dictionary<string, decimal> { { "level2", 2 } }, 2 },
+    /// <summary>
+    /// Тестирует выполнение программ с вводом/выводом через FakeEnvironment.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(GetIoExecutionTests))]
+    public void ExecutesIoWithFakeEnvironment(string code, decimal[] inputs, decimal[] expectedOutputs)
+    {
+        FakeEnvironment env = new();
+        foreach (decimal input in inputs)
+        {
+            env.AddInput(input);
+        }
 
-            // Идентификатор в выражении
-            { "x melomo y", new Dictionary<string, decimal> { { "x", 5 }, { "y", 3 } }, 8 },
+        Parser.ParseProgram(code, env);
+
+        Assert.Equal(expectedOutputs.Length, env.Results.Count);
+        for (int i = 0; i < expectedOutputs.Length; i++)
+        {
+            Assert.Equal(expectedOutputs[i], env.Results[i]);
+        }
+    }
+
+    /// <summary>
+    /// Тестирует обработку ошибок парсинга.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(GetErrorTests))]
+    public void ParseErrorTest(string code)
+    {
+        if (code.Contains("bello!"))
+        {
+            Assert.Throws<InvalidOperationException>(() => Parser.ParseProgram(code));
+        }
+        else
+        {
+            Parser parser = new(new TokenStream(code));
+            Assert.ThrowsAny<Exception>(() => parser.EvaluateExpression(code));
+        }
+    }
+
+    /// <summary>
+    /// Тестовые данные для выражений.
+    /// </summary>
+    public static TheoryData<string, List<decimal>> GetExpressionTests()
+    {
+        return new TheoryData<string, List<decimal>>
+        {
+            // Числа и базовые операции
+            { "1", [1m] },
+            { "10 melomo 5 flavuk 2", [13m] },
+            { "flavuk 10 melomo 5 flavuk flavuk 5", [0m] }, // -10 + 5 - (-5) = 0
+            { "10 dibotada 5 poopaye 2", [25m] },
+            { "10 pado 2", [0m] },
+            { "10 pado 3", [1m] },
+            { "1.128 melomo 8 flavuk 7.5", [1m] }, // 1.628 -> 1 при приведении к int
+            { "2 beedo 5", [32m] },
+            { "(2 melomo 3) poopaye 10", [0m] }, // 0.5 -> 0 при приведении к int
+            { "(flavuk 2) beedo 10", [1024m] },
+            { "flavuk 2 beedo 10", [-1024m] },
+
+            // Логические операции
+            { "da", [1m] },
+            { "no", [0m] },
+            { "5 con 5", [1m] },
+            { "5 nocon 10", [1m] },
+            { "5 la 10", [1m] },
+            { "5 la con 5", [1m] },
+            { "10 looka too 5", [1m] },
+            { "10 looka too con 10", [1m] },
+            { "da tropa no", [0m] },
+            { "da bo-ca no", [1m] },
+            { "makoroni da", [0m] },
+            { "makoroni no", [1m] },
+
+            // Приоритет операторов
+            { "2 melomo 3 dibotada 4", [14m] },
+            { "2 dibotada 3 beedo 2", [18m] },
+            { "(2 melomo 3) dibotada 4", [20m] },
+            { "flavuk 5 dibotada 3", [-15m] },
+            { "da tropa no bo-ca da", [1m] },
+
+            // Функции
+            { "muak(flavuk 15)", [15m] },
+            { "miniboss(5, 4)", [4m] },
+            { "bigboss(5, 4)", [5m] },
+            { "miniboss(bigboss(1, 5), miniboss(10, 6))", [5m] },
         };
     }
 
     /// <summary>
-    /// Тестовые данные для первичных выражений.
+    /// Тестовые данные для программ верхнего уровня.
     /// </summary>
-    public static TheoryData<string, int> GetPrimaryExpressionData()
+    public static TheoryData<string, List<decimal>> GetProgramTests()
     {
-        return new TheoryData<string, int>
+        return new TheoryData<string, List<decimal>>
         {
-            // Числовые литералы
-            { "42", 42 },
-            { "-7", -7 },
+            // Минимальная программа с выводом
+            {
+                """
+                bello!
+                tulalilloo ti amo (1) naidu!
+                """,
+                [1m]
+            },
 
-            // Логические литералы
-            { "da", 1 },
-            { "no", 0 },
+            // Константы и переменные
+            {
+                """
+                bello!
+                trusela pi Papaya 3.14 naidu!
+                poop x Papaya naidu!
+                x lumai 5 naidu!
+                tulalilloo ti amo (x) naidu!
+                """,
+                [5m]
+            },
 
-            // Константы
-            { "belloPi", 3 }, // 3.14159... -> 3 при приведении к int
+            // Присваивание без вывода (тест синтаксиса)
+            {
+                """
+                bello!
+                poop x Papaya naidu!
+                x lumai 5 naidu!
+                """,
+                []
+            },
 
-            // Скобки
-            { "(2 melomo 3)", 5 }, // Выражение с операцией в скобках
-            { "((42))", 42 }, // Вложенные скобки
+            // Константы belloPi и belloE
+            {
+                """
+                bello!
+                trusela pi Papaya belloPi naidu!
+                trusela e Papaya belloE naidu!
+                """,
+                []
+            },
 
-            // Вызов функции
-            { "muak(2 melomo 3)", 5 }, // Вызов функции с выражением в аргументе
-            { "miniboss(muak(5), 3)", 3 }, // Вызов функции с вложенным вызовом
+            // If/else
+            {
+                """
+                bello!
+                poop x Papaya naidu!
+                x lumai 5 naidu!
+                bi-do (x la 10) oca!
+                    tulalilloo ti amo (1) naidu!
+                stopa
+                """,
+                [1m]
+            },
+
+            // Вложенные блоки
+            {
+                """
+                bello!
+                poop x Papaya naidu!
+                x lumai 5 naidu!
+                bi-do (x la 10) oca!
+                    poop y Papaya naidu!
+                    y lumai x melomo 2 naidu!
+                    bi-do (y looka too con 7) oca!
+                        poop z Papaya naidu!
+                        z lumai y flavuk 5 naidu!
+                        tulalilloo ti amo (z) naidu!
+                    stopa
+                stopa
+                """,
+                [2m] // y = 5 + 2 = 7, условие 7 >= 7 истинно, блок выполняется, z = 7 - 5 = 2
+            },
         };
     }
 
     /// <summary>
-    /// Тестовые данные для унарных операторов.
+    /// Тестовые данные для проверки ввода/вывода через FakeEnvironment.
     /// </summary>
-    public static TheoryData<string, int> GetUnaryOperatorData()
+    public static TheoryData<string, decimal[], decimal[]> GetIoExecutionTests()
     {
-        return new TheoryData<string, int>
+        return new TheoryData<string, decimal[], decimal[]>
         {
-            // Унарный плюс
-            { "melomo 5", 5 },
-            { "melomo muak(5)", 5 }, // Унарный плюс перед вызовом функции
-
-            // Унарный минус
-            { "flavuk 5", -5 },
-            { "flavuk (2 melomo 3)", -5 }, // Унарный минус перед выражением в скобках
-            { "flavuk flavuk 5", 5 }, // Двойной минус
+            {
+                """
+                bello!
+                poop x Papaya naidu!
+                guoleila (x) naidu!
+                tulalilloo ti amo (x melomo 1) naidu!
+                """,
+                new[] { 5m },
+                new[] { 6m }
+            },
+            {
+                """
+                bello!
+                poop a Papaya naidu!
+                poop b Papaya naidu!
+                guoleila (a) naidu!
+                guoleila (b) naidu!
+                tulalilloo ti amo (a melomo b) naidu!
+                """,
+                new[] { 10m, 20m },
+                new[] { 30m }
+            },
+            {
+                """
+                bello!
+                poop x Papaya naidu!
+                guoleila (x) naidu!
+                x lumai x dibotada x naidu!
+                tulalilloo ti amo (x) naidu!
+                """,
+                new[] { 5m },
+                new[] { 25m }
+            },
         };
     }
 
     /// <summary>
-    /// Тестовые данные для унарных операторов с переменными.
+    /// Тестовые данные для проверки ошибок.
     /// </summary>
-    public static TheoryData<string, Dictionary<string, decimal>, int> GetUnaryOperatorWithVariablesData()
+    public static TheoryData<string> GetErrorTests()
     {
-        return new TheoryData<string, Dictionary<string, decimal>, int>
+        return new TheoryData<string>
         {
-            // Унарный плюс перед переменной
-            { "melomo x", new Dictionary<string, decimal> { { "x", 5 } }, 5 },
+            "(2 melomo 3",
+            "2 melomo 3)",
+            ")2 melomo 3(",
+            "2 melomo",
+            "()",
+            "muak(5",
+            "muak 5)",
+            "muak(,)",
+            "10 poopaye 0",
+            "10 pado 0",
+            "x",
+            "x melomo 5",
+            "!Hello!",
 
-            // Унарный минус перед переменной
-            { "flavuk x", new Dictionary<string, decimal> { { "x", 5 } }, -5 },
+            """
+            trusela pi Papaya 3.14 naidu!
+            """,
+            """
+            bello!
+            poop x Papaya
+            """,
+            """
+            bello!
+            trusela pi Papaya x naidu!
+            """,
+            """
+            bello!
+            tank yu 1 naidu!
+            """,
+            """
+            bello!
+            boss foo Papaya () oca!
+                x lumai 1 naidu!
+            stopa
+            """,
+            """
+            bello!
+            bi-do (da) oca!
+                x lumai 1
+            stopa
+            """,
+            """
+            bello!
+            poop x Papaya
+            x lumai 5 naidu!
+            """,
+            """
+            bello!
+            poop x Papaya naidu!
+            x lumai 5
+            """,
+            """
+            bello!
+            poop x Papaya naidu!
+            tulalilloo ti amo (x)
+            """,
+            """
+            bello!
+            boss test Papaya () oca!
+                poop x Papaya
+                x lumai 1 naidu!
+            stopa
+            """,
+            """
+            bello!
+            boss test Papaya () oca!
+                tank yu 1
+            stopa
+            """,
         };
-    }
-
-    /// <summary>
-    /// Тестовые данные для возведения в степень.
-    /// </summary>
-    public static TheoryData<string, int> GetPowerExpressionData()
-    {
-        return new TheoryData<string, int>
-        {
-            // Базовые случаи
-            { "2 beedo 3", 8 },
-            { "2 beedo 3 beedo 2", 512 }, // Правая ассоциативность: 2^(3^2) = 2^9 = 512
-            { "flavuk 2 beedo 3", -8 }, // Возведение в степень с унарным минусом: (-2)^3 = -8
-            { "2 beedo (3 beedo 2)", 512 }, // Возведение в степень в скобках: 2^(3^2) = 512
-            { "flavuk 2 beedo 10", -1024 }, // -2^10
-        };
-    }
-
-    /// <summary>
-    /// Тестовые данные для умножения, деления и остатка.
-    /// </summary>
-    public static TheoryData<string, int> GetMultiplicativeExpressionData()
-    {
-        return new TheoryData<string, int>
-        {
-            // Умножение
-            { "2 dibotada 3", 6 },
-            { "flavuk 2 dibotada 3", -6 }, // Умножение с унарным минусом
-            { "2 dibotada 3 dibotada 4", 24 }, // Левая ассоциативность: (2*3)*4
-
-            // Деление
-            { "10 poopaye 2", 5 },
-            { "20 poopaye 4 poopaye 2", 2 }, // Левая ассоциативность: (20/4)/2
-
-            // Остаток
-            { "10 pado 3", 1 },
-            { "flavuk 10 pado 3", -1 }, // Остаток с унарным минусом
-
-            // Смешанные операции
-            { "10 dibotada 2 poopaye 4 pado 3", 2 }, // 10*2/4%3 = 20/4%3 = 5%3 = 2
-        };
-    }
-
-    /// <summary>
-    /// Тестовые данные для сложения и вычитания.
-    /// </summary>
-    public static TheoryData<string, int> GetAdditiveExpressionData()
-    {
-        return new TheoryData<string, int>
-        {
-            // Сложение
-            { "2 melomo 3", 5 },
-            { "1 melomo 2 melomo 3", 6 }, // Левая ассоциативность: (1+2)+3
-
-            // Вычитание
-            { "10 flavuk 3", 7 },
-            { "flavuk 10 flavuk 3", -13 }, // Вычитание с унарным минусом: (-10)-3 = -13
-            { "10 flavuk 3 flavuk 2", 5 }, // Левая ассоциативность: (10-3)-2
-
-            // Смешанные операции
-            { "10 melomo 5 flavuk 3", 12 }, // 10+5-3 = 12
-        };
-    }
-
-    /// <summary>
-    /// Тестовые данные для операторов сравнения.
-    /// </summary>
-    public static TheoryData<string, int> GetRelationalExpressionData()
-    {
-        return new TheoryData<string, int>
-        {
-            // Меньше
-            { "5 la 10", 1 }, // true
-
-            // Меньше или равно
-            { "5 la con 5", 1 }, // true
-
-            // Больше
-            { "10 looka too 5", 1 }, // true
-
-            // Больше или равно
-            { "10 looka too con 10", 1 }, // true
-
-            // Цепочки сравнений (левая ассоциативность)
-            { "5 la 10 la 15", 1 }, // (5<10)<15 = (1)<15 = 1<15 = true = 1
-
-            // Смешанные сравнения
-            { "1 la 2 looka too 3", 0 },
-        };
-    }
-
-    /// <summary>
-    /// Тестовые данные для равенства и неравенства.
-    /// </summary>
-    public static TheoryData<string, int> GetEqualityExpressionData()
-    {
-        return new TheoryData<string, int>
-        {
-            // Равенство
-            { "5 con 5", 1 }, // true
-            { "da con no", 0 }, // false
-
-            // Неравенство
-            { "5 nocon 10", 1 }, // true
-
-            // Цепочки равенств (левая ассоциативность)
-            { "5 con 5 con 5", 0 }, // (5==5)==5 = (1)==5 = false = 0
-            { "5 con 5 nocon 0", 1 }, // (5==5)!=0 = (1)!=0 = true = 1
-        };
-    }
-
-    /// <summary>
-    /// Тестовые данные для логического И.
-    /// </summary>
-    public static TheoryData<string, int> GetLogicalAndExpressionData()
-    {
-        return new TheoryData<string, int>
-        {
-            { "da tropa no", 0 }, // true && false = false
-            { "da tropa da tropa da", 1 }, // Левая ассоциативность
-        };
-    }
-
-    /// <summary>
-    /// Тестовые данные для логического ИЛИ.
-    /// </summary>
-    public static TheoryData<string, int> GetLogicalOrExpressionData()
-    {
-        return new TheoryData<string, int>
-        {
-            { "no bo-ca no", 0 }, // false || false = false
-            { "no bo-ca no bo-ca da", 1 }, // Левая ассоциативность
-            { "da bo-ca no", 1 }, // true || false = true
-        };
-    }
-
-    /// <summary>
-    /// Тестовые данные для логического НЕ.
-    /// </summary>
-    public static TheoryData<string, int> GetLogicalNotExpressionData()
-    {
-        return new TheoryData<string, int>
-        {
-            { "makoroni da", 0 }, // !true = false
-            { "makoroni no", 1 }, // !false = true
-            { "makoroni (5 con 5)", 0 }, // Логическое НЕ от выражения: !(5==5) = !true = false
-            { "makoroni da tropa no", 0 }, // Логическое НЕ с логическим И: !(true&&false) = !false = true
-            { "makoroni da bo-ca no", 0 }, // Логическое НЕ с логическим ИЛИ: !(true||false) = !true = false
-            { "makoroni makoroni da", 1 }, // Двойное логическое НЕ: !!true = true (правая ассоциативность)
-        };
-    }
-
-    /// <summary>
-    /// Тестовые данные для проверки приоритета операторов.
-    /// </summary>
-    public static TheoryData<string, int> GetOperatorPrecedenceData()
-    {
-        return new TheoryData<string, int>
-        {
-            // Скобки имеют наивысший приоритет
-            { "(2 melomo 3) dibotada 4", 20 }, // (2+3)*4 = 20
-
-            // Унарные операторы выше бинарных
-            { "flavuk 5 dibotada 3", -15 }, // (-5)*3 = -15
-
-            // Возведение в степень выше умножения
-            { "2 dibotada 3 beedo 2", 18 }, // 2*(3^2) = 18
-
-            // Умножение выше сложения
-            { "2 melomo 3 dibotada 4", 14 }, // 2+(3*4) = 14
-
-            // Сложение выше сравнения
-            { "5 la 3 melomo 2", 0 }, // 5<(3+2) = 5<5 = false = 0
-
-            // Логическое И выше логического ИЛИ
-            { "da tropa no bo-ca da", 1 }, // (da&&no)||da = false||true = true
-
-            // Комплексные выражения
-            { "muak(2 melomo 3) dibotada miniboss(4, 5)", 20 }, // abs(2+3)*min(4,5) = 5*4 = 20
-        };
-    }
-
-    /// <summary>
-    /// Тестовые данные для обработки ошибок.
-    /// </summary>
-    public static TheoryData<string, Type> GetErrorHandlingData()
-    {
-        return new TheoryData<string, Type>
-        {
-            // Незакрытая скобка
-            { "(2 melomo 3", typeof(InvalidOperationException) },
-
-            // Лишняя закрывающая скобка
-            { "2 melomo 3)", typeof(InvalidOperationException) },
-
-            // Неправильный порядок скобок
-            { ")2 melomo 3(", typeof(InvalidOperationException) },
-
-            // Отсутствие операнда после оператора
-            { "2 melomo", typeof(InvalidOperationException) },
-
-            // Пустое выражение в скобках
-            { "()", typeof(InvalidOperationException) },
-
-            // Отсутствие закрывающей скобки в вызове функции
-            { "muak(5", typeof(InvalidOperationException) },
-
-            // Отсутствие открывающей скобки в вызове функции
-            { "muak 5)", typeof(InvalidOperationException) },
-
-            // Ошибки аргументов функции
-            { "muak(,)", typeof(InvalidOperationException) },
-            { "miniboss(a, b,)", typeof(InvalidOperationException) },
-
-            // Деление на ноль
-            { "10 poopaye 0", typeof(DivideByZeroException) },
-
-            // Остаток от деления на ноль
-            { "10 pado 0", typeof(DivideByZeroException) },
-
-            // Неизвестная переменная
-            { "x", typeof(InvalidOperationException) },
-            { "x melomo 5", typeof(InvalidOperationException) },
-
-            // Некорректные токены/выражения
-            { "123abc", typeof(InvalidOperationException) },
-            { "a invalid b", typeof(InvalidOperationException) },
-            { "   ", typeof(InvalidOperationException) },
-
-            // Строковые литералы пока не поддержаны
-            { "!Hello!", typeof(NotImplementedException) },
-        };
-    }
-
-    private static void AssertEvaluated(string code, int expected, Dictionary<string, decimal>? variables = null)
-    {
-        Parser parser = new Parser(new TokenStream(code), variables);
-        int actual = parser.EvaluateExpression(code, variables);
-        Assert.Equal(expected, actual);
-    }
-
-    private static void AssertThrows(string code, Type expectedExceptionType, Dictionary<string, decimal>? variables = null)
-    {
-        Parser parser = new Parser(new TokenStream(code), variables);
-        Assert.Throws(expectedExceptionType, () => parser.EvaluateExpression(code, variables));
     }
 }

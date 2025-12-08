@@ -303,6 +303,7 @@ namespace Lexer
                 "guoleila" => TokenType.Guoleila,
                 "tank" => TokenType.Tank,
                 "yu" => TokenType.Yu,
+                "boss" => TokenType.Boss,
                 "boo-ya" => TokenType.BooYa,
                 "naidu!" => TokenType.Naidu,
                 "loka" => TokenType.Loka,
