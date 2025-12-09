@@ -8,16 +8,6 @@ namespace Ast.Statements;
 public class WhileStatement : Statement
 {
     /// <summary>
-    /// Условие цикла.
-    /// </summary>
-    public Expression Condition { get; }
-
-    /// <summary>
-    /// Тело цикла.
-    /// </summary>
-    public Block Body { get; }
-
-    /// <summary>
     /// Инициализирует новый экземпляр класса <see cref="WhileStatement"/>.
     /// </summary>
     /// <param name="condition">Условие цикла.</param>
@@ -28,10 +18,19 @@ public class WhileStatement : Statement
         Body = body ?? throw new ArgumentNullException(nameof(body));
     }
 
+    /// <summary>
+    /// Условие цикла.
+    /// </summary>
+    public Expression Condition { get; }
+
+    /// <summary>
+    /// Тело цикла.
+    /// </summary>
+    public Block Body { get; }
+
     /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitWhileStatement(this);
     }
 }
-

@@ -8,6 +8,19 @@ namespace Ast.Statements;
 public class IfStatement : Statement
 {
     /// <summary>
+    /// Инициализирует новый экземпляр класса <see cref="IfStatement"/>.
+    /// </summary>
+    /// <param name="condition">Условие.</param>
+    /// <param name="thenBlock">Блок кода для истинного условия.</param>
+    /// <param name="elseBlock">Блок кода для ложного условия (опционально).</param>
+    public IfStatement(Expression condition, Block thenBlock, Block? elseBlock = null)
+    {
+        Condition = condition ?? throw new ArgumentNullException(nameof(condition));
+        ThenBlock = thenBlock ?? throw new ArgumentNullException(nameof(thenBlock));
+        ElseBlock = elseBlock;
+    }
+
+    /// <summary>
     /// Условие.
     /// </summary>
     public Expression Condition { get; }
@@ -22,23 +35,9 @@ public class IfStatement : Statement
     /// </summary>
     public Block? ElseBlock { get; }
 
-    /// <summary>
-    /// Инициализирует новый экземпляр класса <see cref="IfStatement"/>.
-    /// </summary>
-    /// <param name="condition">Условие.</param>
-    /// <param name="thenBlock">Блок кода для истинного условия.</param>
-    /// <param name="elseBlock">Блок кода для ложного условия (опционально).</param>
-    public IfStatement(Expression condition, Block thenBlock, Block? elseBlock = null)
-    {
-        Condition = condition ?? throw new ArgumentNullException(nameof(condition));
-        ThenBlock = thenBlock ?? throw new ArgumentNullException(nameof(thenBlock));
-        ElseBlock = elseBlock;
-    }
-
     /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitIfStatement(this);
     }
 }
-

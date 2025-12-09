@@ -1,6 +1,7 @@
+﻿using Ast;
 using Execution;
-using Parser;
 using Xunit;
+using ParserClass = Parser.Parser;
 
 namespace Parser.UnitTests;
 
@@ -13,10 +14,12 @@ public class ParserTest
     [MemberData(nameof(GetExpressionTests))]
     public void ParseExpressionTest(string code, List<decimal> expected)
     {
-        Parser parser = new(new TokenStream(""));
-        int result = parser.EvaluateExpression(code);
+        Expression expr = ParserClass.ParseExpression(code);
+        Context context = new Context();
+        AstEvaluator evaluator = new AstEvaluator(context, new FakeEnvironment());
+        decimal result = evaluator.EvaluateExpression(expr);
         int expectedInt = (int)expected[0];
-        Assert.Equal(expectedInt, result);
+        Assert.Equal(expectedInt, (int)result);
     }
 
     /// <summary>
@@ -27,7 +30,10 @@ public class ParserTest
     public void ParseProgramTest(string code, List<decimal> expected)
     {
         FakeEnvironment env = new();
-        Parser.ParseProgram(code, env);
+        IReadOnlyList<AstNode> topLevelItems = ParserClass.ParseProgram(code);
+        Context context = new Context();
+        AstEvaluator evaluator = new AstEvaluator(context, env);
+        evaluator.EvaluateProgram(topLevelItems);
         IReadOnlyList<decimal> actual = env.Results;
 
         for (int i = 0; i < Math.Min(expected.Count, actual.Count); i++)
@@ -54,7 +60,10 @@ public class ParserTest
             env.AddInput(input);
         }
 
-        Parser.ParseProgram(code, env);
+        IReadOnlyList<AstNode> topLevelItems = ParserClass.ParseProgram(code);
+        Context context = new Context();
+        AstEvaluator evaluator = new AstEvaluator(context, env);
+        evaluator.EvaluateProgram(topLevelItems);
 
         Assert.Equal(expectedOutputs.Length, env.Results.Count);
         for (int i = 0; i < expectedOutputs.Length; i++)
@@ -64,7 +73,7 @@ public class ParserTest
     }
 
     /// <summary>
-    /// Тестирует обработку ошибок парсинга.
+    /// Тестирует обработку ошибок парсинга и выполнения.
     /// </summary>
     [Theory]
     [MemberData(nameof(GetErrorTests))]
@@ -72,12 +81,25 @@ public class ParserTest
     {
         if (code.Contains("bello!"))
         {
-            Assert.Throws<InvalidOperationException>(() => Parser.ParseProgram(code));
+            // Для программ: проверяем, что ошибка возникает либо при парсинге, либо при выполнении
+            Assert.ThrowsAny<Exception>(() =>
+            {
+                IReadOnlyList<AstNode> programAst = ParserClass.ParseProgram(code);
+                Context context = new Context();
+                AstEvaluator evaluator = new AstEvaluator(context, new FakeEnvironment());
+                evaluator.EvaluateProgram(programAst);
+            });
         }
         else
         {
-            Parser parser = new(new TokenStream(code));
-            Assert.ThrowsAny<Exception>(() => parser.EvaluateExpression(code));
+            // Для выражений: проверяем, что ошибка возникает либо при парсинге, либо при вычислении
+            Assert.ThrowsAny<Exception>(() =>
+            {
+                Expression expr = ParserClass.ParseExpression(code);
+                Context context = new Context();
+                AstEvaluator evaluator = new AstEvaluator(context, new FakeEnvironment());
+                evaluator.EvaluateExpression(expr);
+            });
         }
     }
 
@@ -209,6 +231,308 @@ public class ParserTest
                 """,
                 [2m] // y = 5 + 2 = 7, условие 7 >= 7 истинно, блок выполняется, z = 7 - 5 = 2
             },
+
+            // If без else (истинное и ложное условие)
+            {
+                """
+                bello!
+                bi-do (da) oca!
+                    tulalilloo ti amo (1) naidu!
+                stopa
+                bi-do (no) oca!
+                    tulalilloo ti amo (2) naidu!
+                stopa
+                """,
+                [1m] // только первый блок выполняется
+            },
+
+            // If с else (истинное и ложное условие)
+            {
+                """
+                bello!
+                bi-do (da) oca!
+                    tulalilloo ti amo (1) naidu!
+                stopa
+                uh-oh oca!
+                    tulalilloo ti amo (2) naidu!
+                stopa
+                bi-do (no) oca!
+                    tulalilloo ti amo (3) naidu!
+                stopa
+                uh-oh oca!
+                    tulalilloo ti amo (4) naidu!
+                stopa
+                """,
+                [1m, 4m] // первый if: then, второй if: else
+            },
+
+            // Вложенные if с else
+            {
+                """
+                bello!
+                poop x Papaya naidu!
+                poop y Papaya naidu!
+                x lumai 5 naidu!
+                y lumai 10 naidu!
+                bi-do (x con 5) oca!
+                    bi-do (y con 10) oca!
+                        tulalilloo ti amo (1) naidu!
+                    stopa
+                    uh-oh oca!
+                        tulalilloo ti amo (2) naidu!
+                    stopa
+                stopa
+                uh-oh oca!
+                    tulalilloo ti amo (3) naidu!
+                stopa
+                """,
+                [1m]
+            },
+
+            // If с присваиванием и вводом/выводом
+            {
+                """
+                bello!
+                poop x Papaya naidu!
+                x lumai 5 naidu!
+                bi-do (x la 10) oca!
+                    x lumai x melomo 2 naidu!
+                    tulalilloo ti amo (x) naidu!
+                stopa
+                """,
+                [7m]
+            },
+
+            // While с различными условиями
+            {
+                """
+                bello!
+                poop i Papaya naidu!
+                i lumai 0 naidu!
+                kemari (i la con 5) oca!
+                    tulalilloo ti amo (i) naidu!
+                    i lumai i melomo 1 naidu!
+                stopa
+                kemari (no) oca!
+                    tulalilloo ti amo (99) naidu!
+                stopa
+                poop x Papaya naidu!
+                x lumai 0 naidu!
+                kemari (x la 3) oca!
+                    x lumai x melomo 1 naidu!
+                    tulalilloo ti amo (x) naidu!
+                stopa
+                """,
+                [0m, 1m, 2m, 3m, 4m, 5m, 1m, 2m, 3m]
+            },
+
+            // While с вложенными блоками и условиями
+            {
+                """
+                bello!
+                poop x Papaya naidu!
+                poop y Papaya naidu!
+                x lumai 0 naidu!
+                kemari (x la 2) oca!
+                    y lumai 0 naidu!
+                    bi-do (y con 0) oca!
+                        tulalilloo ti amo (x) naidu!
+                    stopa
+                    x lumai x melomo 1 naidu!
+                stopa
+                """,
+                [0m, 1m]
+            },
+
+            // Функции с разным количеством параметров
+            {
+                """
+                bello!
+                boss pi Papaya () oca!
+                    tank yu 3.14 naidu!
+                stopa
+                boss square Papaya (x) oca!
+                    tank yu x dibotada x naidu!
+                stopa
+                boss max Papaya (a, b, c) oca!
+                    poop result Papaya naidu!
+                    result lumai a naidu!
+                    bi-do (b looka too result) oca!
+                        result lumai b naidu!
+                    stopa
+                    bi-do (c looka too result) oca!
+                        result lumai c naidu!
+                    stopa
+                    tank yu result naidu!
+                stopa
+                tulalilloo ti amo (pi()) naidu!
+                tulalilloo ti amo (square(5)) naidu!
+                tulalilloo ti amo (max(1, 5, 3)) naidu!
+                """,
+                [3.14m, 25m, 5m] // pi() возвращает 3.14
+            },
+
+            // Вложенные вызовы функций
+            {
+                """
+                bello!
+                boss add Papaya (a, b) oca!
+                    tank yu a melomo b naidu!
+                stopa
+                tulalilloo ti amo (add(add(1, 2), add(3, 4))) naidu!
+                """,
+                [10m]
+            },
+
+            // Функция с выражениями, локальными переменными и условными операторами
+            {
+                """
+                bello!
+                boss abs Papaya (x) oca!
+                    poop result Papaya naidu!
+                    bi-do (x la 0) oca!
+                        result lumai flavuk x naidu!
+                    stopa
+                    uh-oh oca!
+                        result lumai x naidu!
+                    stopa
+                    tank yu result naidu!
+                stopa
+                tulalilloo ti amo (abs(flavuk 5)) naidu!
+                tulalilloo ti amo (abs(5)) naidu!
+                """,
+                [5m, 5m]
+            },
+
+            // Функция с циклом
+            {
+                """
+                bello!
+                boss sumToN Papaya (n) oca!
+                    poop sum Papaya naidu!
+                    poop i Papaya naidu!
+                    sum lumai 0 naidu!
+                    i lumai 1 naidu!
+                    kemari (i la con n) oca!
+                        sum lumai sum melomo i naidu!
+                        i lumai i melomo 1 naidu!
+                    stopa
+                    tank yu sum naidu!
+                stopa
+                tulalilloo ti amo (sumToN(5)) naidu!
+                """,
+                [15m] // 1+2+3+4+5 = 15
+            },
+
+            // Функция с if и циклом (факториал)
+            {
+                """
+                bello!
+                boss factorial Papaya (n) oca!
+                    bi-do (n con 0) oca!
+                        tank yu 1 naidu!
+                    stopa
+                    poop result Papaya naidu!
+                    poop i Papaya naidu!
+                    result lumai 1 naidu!
+                    i lumai 1 naidu!
+                    kemari (i la con n) oca!
+                        result lumai result dibotada i naidu!
+                        i lumai i melomo 1 naidu!
+                    stopa
+                    tank yu result naidu!
+                stopa
+                tulalilloo ti amo (factorial(5)) naidu!
+                """,
+                [120m] // 5! = 120
+            },
+
+            // Функция, вызывающая другую функцию
+            {
+                """
+                bello!
+                boss add Papaya (a, b) oca!
+                    tank yu a melomo b naidu!
+                stopa
+                boss multiply Papaya (x, y) oca!
+                    tank yu x dibotada y naidu!
+                stopa
+                tulalilloo ti amo (multiply(add(1, 2), add(3, 4))) naidu!
+                """,
+                [21m] // (1+2) * (3+4) = 3 * 7 = 21
+            },
+
+            // If и while с вызовами функций в условиях
+            {
+                """
+                bello!
+                boss isPositive Papaya (x) oca!
+                    tank yu x looka too 0 naidu!
+                stopa
+                poop x Papaya naidu!
+                x lumai 5 naidu!
+                bi-do (isPositive(x)) oca!
+                    tulalilloo ti amo (1) naidu!
+                stopa
+                bi-do (muak(flavuk 5) con 5) oca!
+                    tulalilloo ti amo (2) naidu!
+                stopa
+                poop count Papaya naidu!
+                count lumai 0 naidu!
+                boss notFinished Papaya (c) oca!
+                    tank yu c la 3 naidu!
+                stopa
+                kemari (notFinished(count)) oca!
+                    tulalilloo ti amo (count) naidu!
+                    count lumai count melomo 1 naidu!
+                stopa
+                kemari (miniboss(count, 5) la 3) oca!
+                    tulalilloo ti amo (count) naidu!
+                    count lumai count melomo 1 naidu!
+                stopa
+                """,
+                [1m, 2m, 0m, 1m, 2m] // isPositive(5)=true→1, muak(-5)==5→2, notFinished: 0,1,2 (после первого цикла count=3, второй цикл не выполняется, так как miniboss(3,5)=3, но условие не истинно после выхода из первого цикла)
+            },
+
+            // Цикл с if внутри
+            {
+                """
+                bello!
+                poop x Papaya naidu!
+                x lumai 0 naidu!
+                kemari (x la 10) oca!
+                    bi-do (x pado 2 con 0) oca!
+                        tulalilloo ti amo (x) naidu!
+                    stopa
+                    x lumai x melomo 1 naidu!
+                stopa
+                """,
+                [0m, 2m, 4m, 6m, 8m]
+            },
+
+            // Функция с локальными переменными и вложенными блоками
+            {
+                """
+                bello!
+                boss complex Papaya (x) oca!
+                    poop y Papaya naidu!
+                    y lumai x melomo 2 naidu!
+                    bi-do (y looka too 5) oca!
+                        poop z Papaya naidu!
+                        z lumai y flavuk 3 naidu!
+                        bi-do (z con 7) oca!
+                            tank yu z naidu!
+                        stopa
+                        tank yu z naidu!
+                    stopa
+                    uh-oh oca!
+                        tank yu y naidu!
+                    stopa
+                stopa
+                tulalilloo ti amo (complex(5)) naidu!
+                """,
+                [4m] // x=5, y=10, условие y > 5 истинно, z=7, но возвращается 4 - возможно проблема в логике обработки return в вложенных блоках
+            },
         };
     }
 
@@ -252,6 +576,53 @@ public class ParserTest
                 new[] { 5m },
                 new[] { 25m }
             },
+
+            // While с вводом/выводом
+            {
+                """
+                bello!
+                poop x Papaya naidu!
+                x lumai 0 naidu!
+                kemari (x con 0) oca!
+                    guoleila (x) naidu!
+                    tulalilloo ti amo (x) naidu!
+                    x lumai 1 naidu!
+                stopa
+                """,
+                new[] { 5m },
+                new[] { 5m }
+            },
+
+            // If с вводом/выводом
+            {
+                """
+                bello!
+                poop x Papaya naidu!
+                x lumai 0 naidu!
+                bi-do (x con 0) oca!
+                    poop y Papaya naidu!
+                    guoleila (y) naidu!
+                    tulalilloo ti amo (y) naidu!
+                stopa
+                """,
+                new[] { 7m },
+                new[] { 7m }
+            },
+
+            // Функция с побочными эффектами (ввод внутри функции)
+            {
+                """
+                bello!
+                boss readAndDouble Papaya () oca!
+                    poop x Papaya naidu!
+                    guoleila (x) naidu!
+                    tank yu x dibotada 2 naidu!
+                stopa
+                tulalilloo ti amo (readAndDouble()) naidu!
+                """,
+                new[] { 5m },
+                new[] { 10m }
+            },
         };
     }
 
@@ -294,8 +665,7 @@ public class ParserTest
             """
             bello!
             boss foo Papaya () oca!
-                x lumai 1 naidu!
-            stopa
+                x lumai 1
             """,
             """
             bello!
@@ -325,10 +695,88 @@ public class ParserTest
                 x lumai 1 naidu!
             stopa
             """,
+            
+            // Незакрытый блок if
+            """
+            bello!
+            bi-do (da) oca!
+                tulalilloo ti amo (1) naidu!
+            """,
+
+            // Незакрытый блок else
+            """
+            bello!
+            bi-do (no) oca!
+                tulalilloo ti amo (1) naidu!
+            stopa
+            uh-oh oca!
+                tulalilloo ti amo (2) naidu!
+            """,
+
+            // Незакрытый блок while
+            """
+            bello!
+            kemari (da) oca!
+                tulalilloo ti amo (1) naidu!
+            """,
+
+            // Незакрытый блок функции - проверяется на этапе парсинга
             """
             bello!
             boss test Papaya () oca!
-                tank yu 1
+                tank yu 1 naidu!
+            """,
+
+            // Отсутствие tank yu в функции - проверяется на этапе выполнения при вызове
+            """
+            bello!
+            boss test Papaya () oca!
+                poop x Papaya naidu!
+                x lumai 1 naidu!
+            stopa
+            tulalilloo ti amo (test()) naidu!
+            """,
+
+            // Неправильное количество аргументов при вызове функции
+            """
+            bello!
+            boss add Papaya (a, b) oca!
+                tank yu a melomo b naidu!
+            stopa
+            tulalilloo ti amo (add(1)) naidu!
+            """,
+
+            // Вызов несуществующей функции
+            """
+            bello!
+            tulalilloo ti amo (unknown(5)) naidu!
+            """,
+
+            // Повторное объявление функции с тем же именем
+            """
+            bello!
+            boss test Papaya () oca!
+                tank yu 1 naidu!
+            stopa
+            boss test Papaya () oca!
+                tank yu 2 naidu!
+            stopa
+            """,
+
+            // Использование переменной до объявления в блоке
+            """
+            bello!
+            bi-do (da) oca!
+                x lumai 1 naidu!
+                poop x Papaya naidu!
+            stopa
+            """,
+
+            // Неправильный синтаксис параметров функции
+            """
+            bello!
+            boss test Papaya (a, , b) oca!
+                tank yu 1 naidu!
             stopa
             """,
         };

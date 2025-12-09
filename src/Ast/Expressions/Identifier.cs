@@ -6,11 +6,6 @@ namespace Ast.Expressions;
 public class Identifier : Expression
 {
     /// <summary>
-    /// Имя переменной.
-    /// </summary>
-    public string Name { get; }
-
-    /// <summary>
     /// Инициализирует новый экземпляр класса <see cref="Identifier"/>.
     /// </summary>
     /// <param name="name">Имя переменной.</param>
@@ -19,10 +14,14 @@ public class Identifier : Expression
         Name = name ?? throw new ArgumentNullException(nameof(name));
     }
 
+    /// <summary>
+    /// Имя переменной.
+    /// </summary>
+    public string Name { get; }
+
     /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitIdentifier(this);
     }
 }
-

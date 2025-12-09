@@ -11,4 +11,3 @@ public abstract class AstNode
     /// <param name="visitor">Посетитель для обхода узла.</param>
     public abstract void Accept(IAstVisitor visitor);
 }
-

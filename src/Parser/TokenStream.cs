@@ -72,4 +72,15 @@ public class TokenStream
         currentIndex = savedIndex;
         return next;
     }
+
+    /// <summary>
+    /// Возвращает указатель на предыдущий токен в потоке.
+    /// </summary>
+    public void Back()
+    {
+        if (currentIndex > 0)
+        {
+            currentIndex--;
+        }
+    }
 }

@@ -8,6 +8,19 @@ namespace Ast.Declarations;
 public class FunctionDefinition : Declaration
 {
     /// <summary>
+    /// Инициализирует новый экземпляр класса <see cref="FunctionDefinition"/>.
+    /// </summary>
+    /// <param name="name">Имя функции.</param>
+    /// <param name="parameters">Список имен параметров.</param>
+    /// <param name="body">Тело функции.</param>
+    public FunctionDefinition(string name, IReadOnlyList<string> parameters, Block body)
+    {
+        Name = name ?? throw new ArgumentNullException(nameof(name));
+        Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
+        Body = body ?? throw new ArgumentNullException(nameof(body));
+    }
+
+    /// <summary>
     /// Имя функции.
     /// </summary>
     public string Name { get; }
@@ -22,23 +35,9 @@ public class FunctionDefinition : Declaration
     /// </summary>
     public Block Body { get; }
 
-    /// <summary>
-    /// Инициализирует новый экземпляр класса <see cref="FunctionDefinition"/>.
-    /// </summary>
-    /// <param name="name">Имя функции.</param>
-    /// <param name="parameters">Список имен параметров.</param>
-    /// <param name="body">Тело функции.</param>
-    public FunctionDefinition(string name, IReadOnlyList<string> parameters, Block body)
-    {
-        Name = name ?? throw new ArgumentNullException(nameof(name));
-        Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
-        Body = body ?? throw new ArgumentNullException(nameof(body));
-    }
-
     /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitFunctionDefinition(this);
     }
 }
-

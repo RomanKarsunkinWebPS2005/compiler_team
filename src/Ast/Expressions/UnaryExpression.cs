@@ -6,6 +6,17 @@ namespace Ast.Expressions;
 public class UnaryExpression : Expression
 {
     /// <summary>
+    /// Инициализирует новый экземпляр класса <see cref="UnaryExpression"/>.
+    /// </summary>
+    /// <param name="op">Оператор.</param>
+    /// <param name="operand">Операнд.</param>
+    public UnaryExpression(UnaryOperator op, Expression operand)
+    {
+        Operator = op;
+        Operand = operand ?? throw new ArgumentNullException(nameof(operand));
+    }
+
+    /// <summary>
     /// Тип унарного оператора.
     /// </summary>
     public enum UnaryOperator
@@ -23,7 +34,7 @@ public class UnaryExpression : Expression
         /// <summary>
         /// Логическое НЕ.
         /// </summary>
-        LogicalNot
+        LogicalNot,
     }
 
     /// <summary>
@@ -36,21 +47,9 @@ public class UnaryExpression : Expression
     /// </summary>
     public Expression Operand { get; }
 
-    /// <summary>
-    /// Инициализирует новый экземпляр класса <see cref="UnaryExpression"/>.
-    /// </summary>
-    /// <param name="op">Оператор.</param>
-    /// <param name="operand">Операнд.</param>
-    public UnaryExpression(UnaryOperator op, Expression operand)
-    {
-        Operator = op;
-        Operand = operand ?? throw new ArgumentNullException(nameof(operand));
-    }
-
     /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitUnaryExpression(this);
     }
 }
-

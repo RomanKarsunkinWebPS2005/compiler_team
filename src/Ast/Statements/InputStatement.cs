@@ -6,11 +6,6 @@ namespace Ast.Statements;
 public class InputStatement : Statement
 {
     /// <summary>
-    /// Имя переменной для ввода.
-    /// </summary>
-    public string VariableName { get; }
-
-    /// <summary>
     /// Инициализирует новый экземпляр класса <see cref="InputStatement"/>.
     /// </summary>
     /// <param name="variableName">Имя переменной для ввода.</param>
@@ -19,10 +14,14 @@ public class InputStatement : Statement
         VariableName = variableName ?? throw new ArgumentNullException(nameof(variableName));
     }
 
+    /// <summary>
+    /// Имя переменной для ввода.
+    /// </summary>
+    public string VariableName { get; }
+
     /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitInputStatement(this);
     }
 }
-

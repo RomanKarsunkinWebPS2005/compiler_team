@@ -9,29 +9,40 @@ namespace Ast;
 /// </summary>
 public interface IAstVisitor
 {
-    // Программа
-    void VisitProgram(Program program);
-
     // Объявления
     void VisitFunctionDefinition(FunctionDefinition function);
+
     void VisitConstDeclaration(ConstDeclaration declaration);
 
     // Выражения
     void VisitNumberLiteral(NumberLiteral number);
+
     void VisitIdentifier(Identifier identifier);
+
     void VisitConstant(Constant constant);
+
     void VisitBinaryExpression(BinaryExpression binary);
+
     void VisitUnaryExpression(UnaryExpression unary);
+
     void VisitFunctionCall(FunctionCall call);
 
     // Инструкции
     void VisitVariableDeclaration(VariableDeclaration declaration);
+
     void VisitAssignmentStatement(AssignmentStatement assignment);
+
     void VisitInputStatement(InputStatement input);
+
     void VisitOutputStatement(OutputStatement output);
+
     void VisitIfStatement(IfStatement ifStatement);
+
     void VisitWhileStatement(WhileStatement whileStatement);
+
     void VisitReturnStatement(ReturnStatement returnStatement);
+
     void VisitBlock(Block block);
+
     void VisitExpressionStatement(ExpressionStatement expression);
 }

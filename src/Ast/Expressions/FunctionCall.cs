@@ -6,16 +6,6 @@ namespace Ast.Expressions;
 public class FunctionCall : Expression
 {
     /// <summary>
-    /// Имя функции.
-    /// </summary>
-    public string FunctionName { get; }
-
-    /// <summary>
-    /// Список аргументов.
-    /// </summary>
-    public IReadOnlyList<Expression> Arguments { get; }
-
-    /// <summary>
     /// Инициализирует новый экземпляр класса <see cref="FunctionCall"/>.
     /// </summary>
     /// <param name="functionName">Имя функции.</param>
@@ -26,10 +16,19 @@ public class FunctionCall : Expression
         Arguments = arguments ?? throw new ArgumentNullException(nameof(arguments));
     }
 
+    /// <summary>
+    /// Имя функции.
+    /// </summary>
+    public string FunctionName { get; }
+
+    /// <summary>
+    /// Список аргументов.
+    /// </summary>
+    public IReadOnlyList<Expression> Arguments { get; }
+
     /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitFunctionCall(this);
     }
 }
-

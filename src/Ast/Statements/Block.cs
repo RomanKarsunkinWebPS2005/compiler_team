@@ -6,11 +6,6 @@ namespace Ast.Statements;
 public class Block : Statement
 {
     /// <summary>
-    /// Список инструкций в блоке.
-    /// </summary>
-    public IReadOnlyList<Statement> Statements { get; }
-
-    /// <summary>
     /// Инициализирует новый экземпляр класса <see cref="Block"/>.
     /// </summary>
     /// <param name="statements">Список инструкций в блоке.</param>
@@ -19,10 +14,14 @@ public class Block : Statement
         Statements = statements ?? throw new ArgumentNullException(nameof(statements));
     }
 
+    /// <summary>
+    /// Список инструкций в блоке.
+    /// </summary>
+    public IReadOnlyList<Statement> Statements { get; }
+
     /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitBlock(this);
     }
 }
-

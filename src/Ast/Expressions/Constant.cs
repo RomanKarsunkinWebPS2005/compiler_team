@@ -6,6 +6,15 @@ namespace Ast.Expressions;
 public class Constant : Expression
 {
     /// <summary>
+    /// Инициализирует новый экземпляр класса <see cref="Constant"/>.
+    /// </summary>
+    /// <param name="type">Тип константы.</param>
+    public Constant(ConstantType type)
+    {
+        Type = type;
+    }
+
+    /// <summary>
     /// Тип константы.
     /// </summary>
     public enum ConstantType
@@ -18,7 +27,7 @@ public class Constant : Expression
         /// <summary>
         /// Константа e (число Эйлера).
         /// </summary>
-        E
+        E,
     }
 
     /// <summary>
@@ -26,19 +35,9 @@ public class Constant : Expression
     /// </summary>
     public ConstantType Type { get; }
 
-    /// <summary>
-    /// Инициализирует новый экземпляр класса <see cref="Constant"/>.
-    /// </summary>
-    /// <param name="type">Тип константы.</param>
-    public Constant(ConstantType type)
-    {
-        Type = type;
-    }
-
     /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitConstant(this);
     }
 }
-

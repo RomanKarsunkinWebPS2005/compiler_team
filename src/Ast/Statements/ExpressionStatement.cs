@@ -8,11 +8,6 @@ namespace Ast.Statements;
 public class ExpressionStatement : Statement
 {
     /// <summary>
-    /// Выражение.
-    /// </summary>
-    public Expression Expression { get; }
-
-    /// <summary>
     /// Инициализирует новый экземпляр класса <see cref="ExpressionStatement"/>.
     /// </summary>
     /// <param name="expression">Выражение.</param>
@@ -21,10 +16,14 @@ public class ExpressionStatement : Statement
         Expression = expression ?? throw new ArgumentNullException(nameof(expression));
     }
 
+    /// <summary>
+    /// Выражение.
+    /// </summary>
+    public Expression Expression { get; }
+
     /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitExpressionStatement(this);
     }
 }
-

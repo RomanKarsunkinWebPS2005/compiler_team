@@ -6,11 +6,6 @@ namespace Ast.Expressions;
 public class NumberLiteral : Expression
 {
     /// <summary>
-    /// Значение числа.
-    /// </summary>
-    public decimal Value { get; }
-
-    /// <summary>
     /// Инициализирует новый экземпляр класса <see cref="NumberLiteral"/>.
     /// </summary>
     /// <param name="value">Значение числа.</param>
@@ -19,10 +14,14 @@ public class NumberLiteral : Expression
         Value = value;
     }
 
+    /// <summary>
+    /// Значение числа.
+    /// </summary>
+    public decimal Value { get; }
+
     /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitNumberLiteral(this);
     }
 }
-

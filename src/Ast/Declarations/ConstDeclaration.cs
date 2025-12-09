@@ -8,16 +8,6 @@ namespace Ast.Declarations;
 public class ConstDeclaration : Declaration
 {
     /// <summary>
-    /// Имя константы.
-    /// </summary>
-    public string Name { get; }
-
-    /// <summary>
-    /// Значение константы (литерал или константа belloPi/belloE).
-    /// </summary>
-    public Expression Value { get; }
-
-    /// <summary>
     /// Инициализирует новый экземпляр класса <see cref="ConstDeclaration"/>.
     /// </summary>
     /// <param name="name">Имя константы.</param>
@@ -28,10 +18,19 @@ public class ConstDeclaration : Declaration
         Value = value ?? throw new ArgumentNullException(nameof(value));
     }
 
+    /// <summary>
+    /// Имя константы.
+    /// </summary>
+    public string Name { get; }
+
+    /// <summary>
+    /// Значение константы (литерал или константа belloPi/belloE).
+    /// </summary>
+    public Expression Value { get; }
+
     /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitConstDeclaration(this);
     }
 }
-

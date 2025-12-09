@@ -8,16 +8,6 @@ namespace Ast.Statements;
 public class AssignmentStatement : Statement
 {
     /// <summary>
-    /// Имя переменной.
-    /// </summary>
-    public string VariableName { get; }
-
-    /// <summary>
-    /// Выражение для присваивания.
-    /// </summary>
-    public Expression Expression { get; }
-
-    /// <summary>
     /// Инициализирует новый экземпляр класса <see cref="AssignmentStatement"/>.
     /// </summary>
     /// <param name="variableName">Имя переменной.</param>
@@ -28,10 +18,19 @@ public class AssignmentStatement : Statement
         Expression = expression ?? throw new ArgumentNullException(nameof(expression));
     }
 
+    /// <summary>
+    /// Имя переменной.
+    /// </summary>
+    public string VariableName { get; }
+
+    /// <summary>
+    /// Выражение для присваивания.
+    /// </summary>
+    public Expression Expression { get; }
+
     /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitAssignmentStatement(this);
     }
 }
-

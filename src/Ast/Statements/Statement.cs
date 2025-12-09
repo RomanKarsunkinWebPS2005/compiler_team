@@ -6,4 +6,3 @@ namespace Ast;
 public abstract class Statement : AstNode
 {
 }
-

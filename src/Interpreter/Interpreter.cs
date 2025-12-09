@@ -1,4 +1,5 @@
 #pragma warning disable SA1309 // Field names should not begin with underscore
+using Ast;
 using Execution;
 using Parser;
 
@@ -36,7 +37,11 @@ public class Interpreter
             throw new ArgumentNullException(nameof(code));
         }
 
-        // Используем контекст интерпретатора согласно диаграмме UML
-        Parser.Parser.ParseProgram(code, _context, _environment);
+        // Парсим программу в AST
+        IReadOnlyList<AstNode> topLevelItems = Parser.Parser.ParseProgram(code);
+
+        // Выполняем AST через AstEvaluator
+        AstEvaluator evaluator = new AstEvaluator(_context, _environment);
+        evaluator.EvaluateProgram(topLevelItems);
     }
 }

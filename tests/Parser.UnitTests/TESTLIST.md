@@ -58,46 +58,34 @@
 
 ### Условные операторы
 - [x] If/else: `bi-do` + `uh-oh` с выводом → `[1]` (при `x = 5`)
-- [ ] If без else с истинным условием: `bi-do (da) oca! ... stopa` → выполнение блока
-- [ ] If без else с ложным условием: `bi-do (no) oca! ... stopa` → пропуск блока
-- [ ] If с else, истинное условие: `bi-do (da) oca! ... stopa uh-oh oca! ... stopa` → выполнение then, пропуск else
-- [ ] If с else, ложное условие: `bi-do (no) oca! ... stopa uh-oh oca! ... stopa` → пропуск then, выполнение else
-- [ ] Вложенные if: `bi-do (x con 5) oca! bi-do (y con 10) oca! ... stopa stopa uh-oh oca! ... stopa` → проверка вложенности
-- [ ] If с присваиванием в блоке: `bi-do (x la 10) oca! x lumai x melomo 2 naidu! stopa` → изменение переменной
-- [ ] If с вводом/выводом: `bi-do (x con 0) oca! guoleila (y) naidu! tulalilloo ti amo (y) naidu! stopa` → побочные эффекты
+- [x] If без else (истинное и ложное условие): проверка выполнения и пропуска блока
+- [x] If с else (истинное и ложное условие): проверка выполнения then/else блоков
+- [x] Вложенные if с else: проверка вложенности и области видимости
+- [x] If с присваиванием и вводом/выводом: изменение переменных и побочные эффекты в блоках
 
 ### Циклы
 - [x] While цикл: `kemari` с выводом в цикле → `[0, 1, 2]`
-- [ ] While с условием, которое становится ложным: счетчик от 0 до 5 → `[0, 1, 2, 3, 4, 5]`
-- [ ] While с ложным условием с начала: `kemari (no) oca! ... stopa` → блок не выполняется
-- [ ] While с изменением переменной в теле: `x lumai 0 naidu! kemari (x la 3) oca! x lumai x melomo 1 naidu! stopa` → изменение условия
-- [ ] While с вложенными блоками: `kemari (x la 2) oca! bi-do (y con 0) oca! ... stopa stopa` → вложенность
-- [ ] While с вводом/выводом: `kemari (x con 0) oca! guoleila (x) naidu! tulalilloo ti amo (x) naidu! stopa` → побочные эффекты
-- [ ] While с break через изменение условия: счетчик с условием выхода
+- [x] While с различными условиями: счетчик до N, ложное условие с начала, изменение переменной в теле
+- [x] While с вложенными блоками и условиями: вложенные if внутри цикла, проверка области видимости
+- [x] While с вводом/выводом: побочные эффекты в цикле
 
 ### Функции
 - [x] Определение и вызов функции: `boss add Papaya (a, b)` + вызов → `[8]`
-- [ ] Функция без параметров: `boss pi Papaya () oca! tank yu 3.14 naidu! stopa` + вызов → `[3.14]`
-- [ ] Функция с одним параметром: `boss square Papaya (x) oca! tank yu x dibotada x naidu! stopa` + вызов → `[25]` (при `5`)
-- [ ] Функция с несколькими параметрами: `boss max Papaya (a, b, c) oca! ... stopa` → проверка всех параметров
-- [ ] Вложенные вызовы функций: `boss add Papaya (a, b) ... stopa` + `add(add(1, 2), add(3, 4))` → `[10]`
-- [ ] Функция с выражениями в return: `boss calc Papaya (x) oca! tank yu x melomo 2 flavuk 1 naidu! stopa` → сложное выражение
-- [ ] Функция с побочными эффектами: `boss readAndDouble Papaya () oca! guoleila (x) naidu! tank yu x dibotada 2 naidu! stopa` → ввод в функции
-- [ ] Функция с локальными переменными: `boss test Papaya (x) oca! poop y Papaya naidu! y lumai x melomo 2 naidu! tank yu y naidu! stopa` → область видимости
-- [ ] Функция с условными операторами: `boss abs Papaya (x) oca! bi-do (x la 0) oca! tank yu flavuk x naidu! stopa uh-oh oca! tank yu x naidu! stopa stopa` → if в функции
-- [ ] Функция с циклом: `boss sumToN Papaya (n) oca! poop sum Papaya naidu! poop i Papaya naidu! i lumai 1 naidu! kemari (i la con n) oca! sum lumai sum melomo i naidu! i lumai i melomo 1 naidu! stopa tank yu sum naidu! stopa` → while в функции
+- [x] Функции с разным количеством параметров: без параметров, один параметр, несколько параметров
+- [x] Вложенные вызовы функций: `add(add(1, 2), add(3, 4))` → `[10]`
+- [x] Функция с выражениями, локальными переменными и условными операторами: комплексная функция
+- [x] Функция с циклом: вычисление суммы чисел от 1 до N
+- [x] Функция с побочными эффектами: ввод внутри функции
 
 ### Вложенные блоки
 - [x] Вложенные блоки с областями видимости: вложенные `bi-do` → `[5]`
 
 ### Комбинации конструкций
-- [ ] Функция с if и циклом: `boss factorial Papaya (n) oca! ... kemari ... bi-do ... stopa` → комбинация всех конструкций
-- [ ] If с вызовом функции в условии: `bi-do (isPositive(x)) oca! ... stopa` → функция в условии
-- [ ] While с вызовом функции в условии: `kemari (notFinished()) oca! ... stopa` → функция в условии цикла
-- [ ] Функция, вызывающая другую функцию: `boss add Papaya (a, b) ... stopa` + `boss multiply Papaya (x, y) ... stopa` + `multiply(add(1, 2), add(3, 4))` → цепочка вызовов
-- [ ] If с циклом внутри: `bi-do (x con 1) oca! kemari (i la 5) oca! ... stopa stopa` → цикл в условии
-- [ ] Цикл с if внутри: `kemari (x la 10) oca! bi-do (x pado 2 con 0) oca! ... stopa stopa` → условие в цикле
-- [ ] Функция с локальными переменными и вложенными блоками: проверка области видимости в сложных случаях
+- [x] Функция с if и циклом: факториал как пример комбинации всех конструкций
+- [x] Функция, вызывающая другую функцию: цепочка вызовов пользовательских функций
+- [x] If и while с вызовами функций в условиях: пользовательские и встроенные функции (muak, miniboss, bigboss)
+- [x] Цикл с if внутри: фильтрация элементов в цикле
+- [x] Функция с локальными переменными и вложенными блоками: сложная область видимости
 
 ---
 
@@ -106,6 +94,9 @@
 - [x] Ввод одного числа и вывод: ввод `5` → вывод `[6]`
 - [x] Ввод двух чисел и вывод суммы: ввод `[10, 20]` → вывод `[30]`
 - [x] Ввод, вычисление и вывод: ввод `5` → `x lumai x dibotada x` → вывод `[25]`
+- [x] While с вводом/выводом: побочные эффекты в цикле
+- [x] If с вводом/выводом: побочные эффекты в блоках
+- [x] Функция с побочными эффектами: ввод внутри функции
 
 ---
 
@@ -139,16 +130,16 @@
 - [x] Пропущенный `naidu!` в цикле: `x lumai x melomo 2` без `naidu!`
 - [x] Пропущенный `naidu!` в объявлении внутри функции: `poop x Papaya` без `naidu!`
 - [x] Пропущенный `naidu!` в `tank yu`: `tank yu 1` без `naidu!`
-- [ ] Незакрытый блок if: `bi-do (da) oca! ...` без `stopa`
-- [ ] Незакрытый блок else: `bi-do (no) oca! ... stopa uh-oh oca! ...` без `stopa`
-- [ ] Незакрытый блок while: `kemari (da) oca! ...` без `stopa`
-- [ ] Незакрытый блок функции: `boss test Papaya () oca! ...` без `stopa`
-- [ ] Отсутствие `tank yu` в функции: `boss test Papaya () oca! x lumai 1 naidu! stopa` → ошибка
-- [ ] Неправильное количество аргументов при вызове функции: `add(1)` вместо `add(1, 2)`
-- [ ] Вызов несуществующей функции: `unknown(5) naidu!`
-- [ ] Повторное объявление функции с тем же именем: два `boss test ...`
-- [ ] Использование переменной до объявления в блоке: `x lumai 1 naidu! poop x Papaya naidu!`
-- [ ] Неправильный синтаксис параметров функции: `boss test Papaya (a, , b) oca! ... stopa`
+- [x] Незакрытый блок if: `bi-do (da) oca! ...` без `stopa`
+- [x] Незакрытый блок else: `bi-do (no) oca! ... stopa uh-oh oca! ...` без `stopa`
+- [x] Незакрытый блок while: `kemari (da) oca! ...` без `stopa`
+- [x] Незакрытый блок функции: `boss test Papaya () oca! ...` без `stopa`
+- [x] Отсутствие `tank yu` в функции: `boss test Papaya () oca! x lumai 1 naidu! stopa` → ошибка
+- [x] Неправильное количество аргументов при вызове функции: `add(1)` вместо `add(1, 2)`
+- [x] Вызов несуществующей функции: `unknown(5) naidu!`
+- [x] Повторное объявление функции с тем же именем: два `boss test ...`
+- [x] Использование переменной до объявления в блоке: `x lumai 1 naidu! poop x Papaya naidu!`
+- [x] Неправильный синтаксис параметров функции: `boss test Papaya (a, , b) oca! ... stopa`
 
 ---
 

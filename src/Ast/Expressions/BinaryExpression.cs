@@ -6,6 +6,19 @@ namespace Ast.Expressions;
 public class BinaryExpression : Expression
 {
     /// <summary>
+    /// Инициализирует новый экземпляр класса <see cref="BinaryExpression"/>.
+    /// </summary>
+    /// <param name="left">Левый операнд.</param>
+    /// <param name="op">Оператор.</param>
+    /// <param name="right">Правый операнд.</param>
+    public BinaryExpression(Expression left, BinaryOperator op, Expression right)
+    {
+        Left = left ?? throw new ArgumentNullException(nameof(left));
+        Operator = op;
+        Right = right ?? throw new ArgumentNullException(nameof(right));
+    }
+
+    /// <summary>
     /// Тип бинарного оператора.
     /// </summary>
     public enum BinaryOperator
@@ -78,7 +91,7 @@ public class BinaryExpression : Expression
         /// <summary>
         /// Логическое ИЛИ.
         /// </summary>
-        LogicalOr
+        LogicalOr,
     }
 
     /// <summary>
@@ -96,23 +109,9 @@ public class BinaryExpression : Expression
     /// </summary>
     public Expression Right { get; }
 
-    /// <summary>
-    /// Инициализирует новый экземпляр класса <see cref="BinaryExpression"/>.
-    /// </summary>
-    /// <param name="left">Левый операнд.</param>
-    /// <param name="op">Оператор.</param>
-    /// <param name="right">Правый операнд.</param>
-    public BinaryExpression(Expression left, BinaryOperator op, Expression right)
-    {
-        Left = left ?? throw new ArgumentNullException(nameof(left));
-        Operator = op;
-        Right = right ?? throw new ArgumentNullException(nameof(right));
-    }
-
     /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitBinaryExpression(this);
     }
 }
-
