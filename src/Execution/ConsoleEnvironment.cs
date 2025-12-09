@@ -9,7 +9,7 @@ public class ConsoleEnvironment : IEnvironment
 {
     public void WriteNumber(decimal value)
     {
-        Console.WriteLine("Result: " + value.ToString("0.#####", CultureInfo.InvariantCulture));
+        Console.WriteLine(value.ToString("0.#####", CultureInfo.InvariantCulture));
     }
 
     public decimal ReadNumber()
