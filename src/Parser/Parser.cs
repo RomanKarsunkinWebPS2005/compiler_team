@@ -39,6 +39,24 @@ public class Parser
     }
 
     /// <summary>
+    /// program = "bello!" , { top-level-item } ;
+    /// Выполняет программу с использованием указанного контекста и окружения.
+    /// </summary>
+    /// <param name="code">Исходный код программы.</param>
+    /// <param name="context">Контекст выполнения с областями видимости.</param>
+    /// <param name="environment">Окружение для выполнения программы.</param>
+    public static void ParseProgram(string code, Context context, IEnvironment? environment = null)
+    {
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+
+        Parser parser = new(new TokenStream(code), context, environment);
+        parser.ParseProgramInternal();
+    }
+
+    /// <summary>
     /// Выполняет синтаксический разбор и вычисление выражения.
     /// </summary>
     /// <param name="code">Исходный код выражения.</param>
@@ -100,19 +118,51 @@ public class Parser
     private bool ParseConstDeclaration()
     {
         tokenStream.Advance(); // trusela
-        Expect(TokenType.Identifier, "Ожидалось имя константы после 'trusela'");
+        Token constName = Expect(TokenType.Identifier, "Ожидалось имя константы после 'trusela'");
         ExpectIdentifierLexeme("Papaya", "Ожидался тип Papaya в объявлении константы");
 
         Token valueToken = tokenStream.Peek();
-        bool isConstValue = valueToken.Type == TokenType.NumberLiteral
-            || (valueToken.Type == TokenType.Identifier && (valueToken.Lexeme == "belloPi" || valueToken.Lexeme == "belloE"));
-        if (!isConstValue)
+        decimal constValue;
+
+        if (valueToken.Type == TokenType.NumberLiteral)
+        {
+            tokenStream.Advance();
+            constValue = decimal.Parse(valueToken.Lexeme, CultureInfo.InvariantCulture);
+        }
+        else if (valueToken.Type == TokenType.Identifier)
+        {
+            string constIdentifier = valueToken.Lexeme;
+            if (constIdentifier.Equals("belloPi", StringComparison.OrdinalIgnoreCase))
+            {
+                tokenStream.Advance();
+                constValue = 3.141592653589793m;
+            }
+            else if (constIdentifier.Equals("belloE", StringComparison.OrdinalIgnoreCase))
+            {
+                tokenStream.Advance();
+                constValue = 2.718281828459045m;
+            }
+            else
+            {
+                throw new InvalidOperationException("Ожидалось константное значение (число или belloPi/belloE)");
+            }
+        }
+        else
         {
             throw new InvalidOperationException("Ожидалось константное значение (число или belloPi/belloE)");
         }
 
-        tokenStream.Advance();
         Expect(TokenType.Naidu, "Ожидался разделитель 'naidu!'");
+
+        // Сохраняем константу в контекст
+        if (environment != null)
+        {
+            if (!context.TryDefineVariable(constName.Lexeme, constValue))
+            {
+                throw new InvalidOperationException($"Константа '{constName.Lexeme}' уже объявлена в этой области видимости");
+            }
+        }
+
         return false;
     }
 
@@ -800,12 +850,12 @@ public class Parser
             string name = token.Lexeme;
 
             // Проверяем, является ли это константой
-            if (name == "belloPi")
+            if (name.Equals("belloPi", StringComparison.OrdinalIgnoreCase))
             {
                 return 3.141592653589793m;
             }
 
-            if (name == "belloE")
+            if (name.Equals("belloE", StringComparison.OrdinalIgnoreCase))
             {
                 return 2.718281828459045m;
             }
