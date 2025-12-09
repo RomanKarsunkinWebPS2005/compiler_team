@@ -19,7 +19,7 @@ boss is_prime Papaya (n) oca!
     // Пока i * i <= n (то есть i <= sqrt(n))
     kemari (i dibotada i lacon n) oca!
         // Если n делится на i без остатка — число составное
-        bi-do (pado n i con 0.0) oca!
+        bi-do (n pado i con 0.0) oca!
             tank yu 0.0 naidu!  // Не простое
         stopa
         // Увеличиваем i на 1
