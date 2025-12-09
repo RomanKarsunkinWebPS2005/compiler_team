@@ -88,7 +88,7 @@
 
 ```ebnf
 (* Основное выражение *)
-expression = logical-or-expression ;
+expression = conditional-expression ;
 
 (* Тернарный условный оператор *)
 conditional-expression = logical-or-expression , [ "?" , expression , "!" , expression ] ;
