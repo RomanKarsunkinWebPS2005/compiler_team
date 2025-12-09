@@ -14,7 +14,6 @@ public class Parser
     private readonly TokenStream tokenStream;
     private readonly Context context;
     private readonly IEnvironment? environment;
-    private bool syntaxOnlyMode;
 
     /// <summary>
     /// Инициализирует новый экземпляр класса <see cref="Parser"/>.
@@ -93,21 +92,20 @@ public class Parser
 
         while (tokenStream.Peek().Type != TokenType.EndOfFile)
         {
-            ParseTopLevelItem(trackReturn: false);
+            ParseTopLevelItem();
         }
     }
 
     /// <summary>
-    /// top-level-item = const-declaration | function-definition | statement ;
+    /// top-level-item = const-declaration | statement ;
     /// </summary>
-    private bool ParseTopLevelItem(bool trackReturn)
+    private bool ParseTopLevelItem()
     {
         Token token = tokenStream.Peek();
         return token.Type switch
         {
             TokenType.Trusela => ParseConstDeclaration(),
-            TokenType.Boss => ParseFunctionDefinition(),
-            _ => ParseStatement(trackReturn)
+            _ => ParseStatement()
         };
     }
 
@@ -186,13 +184,10 @@ public class Parser
     ///   | assignment-statement
     ///   | input-statement
     ///   | output-statement
-    ///   | if-statement
-    ///   | while-statement
-    ///   | return-statement
     ///   | expression-statement
     ///   , "naidu!" ;
     /// </summary>
-    private bool ParseStatement(bool trackReturn)
+    private bool ParseStatement()
     {
         Token token = tokenStream.Peek();
 
@@ -202,9 +197,6 @@ public class Parser
             TokenType.Identifier => ParseAssignmentOrExpressionStatement(),
             TokenType.Tulalilloo => ParseOutput(),
             TokenType.Guoleila => ParseInput(),
-            TokenType.BiDo => ParseIf(trackReturn),
-            TokenType.Kemari => ParseWhile(trackReturn),
-            TokenType.Tank => ParseReturn(trackReturn),
             _ => throw new InvalidOperationException($"Неожиданный токен в инструкции: {token}")
         };
     }
@@ -286,275 +278,6 @@ public class Parser
         return false;
     }
 
-    /// <summary>
-    /// if-statement = "bi-do" , "(" , expression , ")" , block , [ "uh-oh" , block ] ;
-    /// </summary>
-    private bool ParseIf(bool trackReturn)
-    {
-        tokenStream.Advance(); // bi-do
-        ExpectDelimiter("(");
-        decimal condition = ParseExpression(); // Вычисляем условие
-        ExpectDelimiter(")");
-
-        bool thenReturn = false;
-
-        // Условие истинно - выполняем then блок
-        if (condition != 0)
-        {
-            thenReturn = ParseBlock(trackReturn);
-
-            // Пропускаем else блок, если он есть (парсим для синтаксиса, но не выполняем)
-            if (tokenStream.Peek().Type == TokenType.UhOh)
-            {
-                tokenStream.Advance();
-                ParseBlock(trackReturn: false);
-            }
-        }
-        else
-        {
-            // Условие ложно - пропускаем then блок, выполняем else если есть
-            // Парсим then блок для синтаксической проверки, но не выполняем statements
-            ParseBlockWithoutExecution();
-
-            if (tokenStream.Peek().Type == TokenType.UhOh)
-            {
-                tokenStream.Advance();
-                thenReturn = ParseBlock(trackReturn);
-            }
-        }
-
-        return thenReturn;
-    }
-
-    /// <summary>
-    /// Парсит блок без выполнения statements (только для синтаксической проверки).
-    /// </summary>
-    private void ParseBlockWithoutExecution()
-    {
-        Expect(TokenType.Oca, "Ожидался старт блока 'oca!'");
-        bool oldSyntaxOnlyMode = syntaxOnlyMode;
-        syntaxOnlyMode = true;
-
-        try
-        {
-            while (tokenStream.Peek().Type != TokenType.Stopa && tokenStream.Peek().Type != TokenType.EndOfFile)
-            {
-            // Пропускаем все statements в блоке
-            Token token = tokenStream.Peek();
-            if (token.Type == TokenType.Poop)
-            {
-                tokenStream.Advance(); // poop
-                Expect(TokenType.Identifier, "");
-                ExpectIdentifierLexeme("Papaya", "");
-                Expect(TokenType.Naidu, "");
-            }
-            else if (token.Type == TokenType.Identifier)
-            {
-                tokenStream.Advance();
-                if (tokenStream.Peek().Type == TokenType.Operator && tokenStream.Peek().Lexeme == "lumai")
-                {
-                    tokenStream.Advance(); // lumai
-                    ParseExpression();
-                    Expect(TokenType.Naidu, "");
-                }
-                else
-                {
-                    ParseExpression();
-                    Expect(TokenType.Naidu, "");
-                }
-            }
-            else if (token.Type == TokenType.Tulalilloo)
-            {
-                tokenStream.Advance(); // tulalilloo
-                Expect(TokenType.Ti, "");
-                Expect(TokenType.Amo, "");
-                ExpectDelimiter("(");
-                ParseExpression();
-                ExpectDelimiter(")");
-                Expect(TokenType.Naidu, "");
-            }
-            else if (token.Type == TokenType.Guoleila)
-            {
-                tokenStream.Advance(); // guoleila
-                ExpectDelimiter("(");
-                Expect(TokenType.Identifier, "");
-                ExpectDelimiter(")");
-                Expect(TokenType.Naidu, "");
-            }
-            else if (token.Type == TokenType.BiDo)
-            {
-                // Парсим if без выполнения (только синтаксическая проверка)
-                tokenStream.Advance(); // bi-do
-                ExpectDelimiter("(");
-                ParseExpression(); // Условие
-                ExpectDelimiter(")");
-                ParseBlockWithoutExecution(); // Then блок
-                if (tokenStream.Peek().Type == TokenType.UhOh)
-                {
-                    tokenStream.Advance();
-                    ParseBlockWithoutExecution(); // Else блок
-                }
-            }
-            else if (token.Type == TokenType.Kemari)
-            {
-                // Парсим while без выполнения (только синтаксическая проверка)
-                tokenStream.Advance(); // kemari
-                ExpectDelimiter("(");
-                ParseExpression(); // Условие
-                ExpectDelimiter(")");
-                ParseBlockWithoutExecution(); // Блок цикла
-            }
-            else
-            {
-                throw new InvalidOperationException($"Неожиданный токен: {token}");
-            }
-            }
-        }
-        finally
-        {
-            syntaxOnlyMode = oldSyntaxOnlyMode;
-        }
-
-        Expect(TokenType.Stopa, "Ожидался конец блока 'stopa'");
-    }
-
-    /// <summary>
-    /// while-statement = "kemari" , "(" , expression , ")" , block ;
-    /// </summary>
-    private bool ParseWhile(bool trackReturn)
-    {
-        tokenStream.Advance(); // kemari
-
-        // Сохраняем позицию начала условия для повторной проверки
-        int conditionStart = tokenStream.Peek().Position;
-        bool bodyReturn = false;
-
-        while (true)
-        {
-            ExpectDelimiter("(");
-            decimal condition = ParseExpression(); // Вычисляем условие
-            ExpectDelimiter(")");
-
-            // Условие ложно - выходим из цикла
-            if (condition == 0)
-            {
-                // Парсим блок для синтаксической проверки, но не выполняем
-                ParseBlockWithoutExecution();
-                break;
-            }
-
-            // Условие истинно - выполняем блок
-            bodyReturn = ParseBlock(trackReturn) || bodyReturn;
-
-            // После выполнения блока нужно снова проверить условие
-            // Но мы не можем вернуться назад в токен-стриме
-            // Поэтому цикл выполняется только один раз
-            // Для правильной реализации нужна более сложная логика
-            break; // Временно: выполняем только одну итерацию
-        }
-
-        return bodyReturn;
-    }
-
-    /// <summary>
-    /// return-statement = "tank" , "yu" , expression , "naidu!" ;
-    /// </summary>
-    private bool ParseReturn(bool trackReturn)
-    {
-        if (!trackReturn)
-        {
-            throw new InvalidOperationException("Ожидался tank yu только внутри функции");
-        }
-
-        tokenStream.Advance(); // tank
-        Expect(TokenType.Yu, "Ожидалось 'yu' после 'tank'");
-        ParseExpression(); // Значение возврата (не используется, но парсится)
-        Expect(TokenType.Naidu, "Ожидался разделитель 'naidu!'");
-        return true;
-    }
-
-    /// <summary>
-    /// function-definition = "boss" , identifier , "Papaya" , "(" , [ parameter-list ] , ")" , block ;
-    /// parameter-list = identifier , { \",\" , identifier } ;
-    /// </summary>
-    private bool ParseFunctionDefinition()
-    {
-        tokenStream.Advance(); // boss
-        Expect(TokenType.Identifier, "Ожидалось имя функции после 'boss'");
-        ExpectIdentifierLexeme("Papaya", "Ожидался тип Papaya у функции");
-        ExpectDelimiter("(");
-
-        List<string> parameters = new();
-        if (!(tokenStream.Peek().Type == TokenType.Delimiter && tokenStream.Peek().Lexeme == ")"))
-        {
-            Token param = Expect(TokenType.Identifier, "Ожидалось имя параметра");
-            parameters.Add(param.Lexeme);
-            while (tokenStream.Peek().Type == TokenType.Delimiter && tokenStream.Peek().Lexeme == ",")
-            {
-                tokenStream.Advance();
-                param = Expect(TokenType.Identifier, "Ожидалось имя параметра");
-                parameters.Add(param.Lexeme);
-            }
-        }
-
-        ExpectDelimiter(")");
-
-        // Создаем область видимости для функции и объявляем параметры
-        if (environment != null)
-        {
-            context.PushScope();
-            foreach (string paramName in parameters)
-            {
-                context.TryDefineVariable(paramName, 0m);
-            }
-        }
-
-        bool hasReturn = ParseBlock(trackReturn: true);
-
-        if (environment != null)
-        {
-            context.PopScope();
-        }
-
-        if (!hasReturn)
-        {
-            throw new InvalidOperationException("В теле функции ожидался 'tank yu'");
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// block = "oca!" , { statement } , "stopa" ;
-    /// </summary>
-    private bool ParseBlock(bool trackReturn)
-    {
-        Expect(TokenType.Oca, "Ожидался старт блока 'oca!'");
-        if (environment != null)
-        {
-            context.PushScope();
-        }
-
-        bool hasReturn = false;
-        try
-        {
-            while (tokenStream.Peek().Type != TokenType.Stopa && tokenStream.Peek().Type != TokenType.EndOfFile)
-            {
-                bool stmtReturn = ParseTopLevelItem(trackReturn);
-                hasReturn = hasReturn || stmtReturn;
-            }
-        }
-        finally
-        {
-            if (environment != null)
-            {
-                context.PopScope();
-            }
-        }
-
-        Expect(TokenType.Stopa, "Ожидался конец блока 'stopa'");
-        return hasReturn;
-    }
 
     /// <summary>
     /// Разбирает выражение верхнего уровня.
@@ -867,12 +590,6 @@ public class Parser
             }
 
             // Иначе это переменная
-            if (syntaxOnlyMode)
-            {
-                // В режиме только синтаксиса возвращаем 0 для неизвестных переменных
-                return 0m;
-            }
-
             if (context.TryGetVariable(name, out decimal value))
             {
                 return value;

@@ -177,38 +177,6 @@ public class ParserTest
                 """,
                 []
             },
-
-            // If/else
-            {
-                """
-                bello!
-                poop x Papaya naidu!
-                x lumai 5 naidu!
-                bi-do (x la 10) oca!
-                    tulalilloo ti amo (1) naidu!
-                stopa
-                """,
-                [1m]
-            },
-
-            // Вложенные блоки
-            {
-                """
-                bello!
-                poop x Papaya naidu!
-                x lumai 5 naidu!
-                bi-do (x la 10) oca!
-                    poop y Papaya naidu!
-                    y lumai x melomo 2 naidu!
-                    bi-do (y looka too con 7) oca!
-                        poop z Papaya naidu!
-                        z lumai y flavuk 5 naidu!
-                        tulalilloo ti amo (z) naidu!
-                    stopa
-                stopa
-                """,
-                [2m] // y = 5 + 2 = 7, условие 7 >= 7 истинно, блок выполняется, z = 7 - 5 = 2
-            },
         };
     }
 
@@ -289,22 +257,6 @@ public class ParserTest
             """,
             """
             bello!
-            tank yu 1 naidu!
-            """,
-            """
-            bello!
-            boss foo Papaya () oca!
-                x lumai 1 naidu!
-            stopa
-            """,
-            """
-            bello!
-            bi-do (da) oca!
-                x lumai 1
-            stopa
-            """,
-            """
-            bello!
             poop x Papaya
             x lumai 5 naidu!
             """,
@@ -317,19 +269,6 @@ public class ParserTest
             bello!
             poop x Papaya naidu!
             tulalilloo ti amo (x)
-            """,
-            """
-            bello!
-            boss test Papaya () oca!
-                poop x Papaya
-                x lumai 1 naidu!
-            stopa
-            """,
-            """
-            bello!
-            boss test Papaya () oca!
-                tank yu 1
-            stopa
             """,
         };
     }

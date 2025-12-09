@@ -56,18 +56,6 @@
 ### Ввод/вывод
 - [x] Ввод и вывод: `guoleila (x)` + `tulalilloo ti amo (x melomo 1)` → `[6]` (при вводе `5`)
 
-### Условные операторы
-- [x] If/else: `bi-do` + `uh-oh` с выводом → `[1]` (при `x = 5`)
-
-### Циклы
-- [x] While цикл: `kemari` с выводом в цикле → `[0, 1, 2]`
-
-### Функции
-- [x] Определение и вызов функции: `boss add Papaya (a, b)` + вызов → `[8]`
-
-### Вложенные блоки
-- [x] Вложенные блоки с областями видимости: вложенные `bi-do` → `[5]`
-
 ---
 
 ## Ввод/вывод через FakeEnvironment (ExecutesIoWithFakeEnvironment)
@@ -99,15 +87,9 @@
 - [x] Отсутствие `bello!`: программа без старта
 - [x] Пропущенный `naidu!` в объявлении переменной: `poop x Papaya`
 - [x] Неконстантное значение в `trusela`: `trusela pi Papaya x naidu!`
-- [x] `tank yu` вне функции: `tank yu 1 naidu!`
-- [x] Необъявленная переменная в функции: использование `x` без объявления
-- [x] Пропущенный `naidu!` в блоке: `x lumai 1` без `naidu!`
 - [x] Пропущенный `naidu!` в объявлении: `poop x Papaya` без `naidu!`
 - [x] Пропущенный `naidu!` в присваивании: `x lumai 5` без `naidu!`
 - [x] Пропущенный `naidu!` в выводе: `tulalilloo ti amo (x)` без `naidu!`
-- [x] Пропущенный `naidu!` в цикле: `x lumai x melomo 2` без `naidu!`
-- [x] Пропущенный `naidu!` в объявлении внутри функции: `poop x Papaya` без `naidu!`
-- [x] Пропущенный `naidu!` в `tank yu`: `tank yu 1` без `naidu!`
 
 ---
 
