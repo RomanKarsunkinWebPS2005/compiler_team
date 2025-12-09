@@ -72,4 +72,15 @@ public class TokenStream
         currentIndex = savedIndex;
         return next;
     }
+
+    /// <summary>
+    /// Возвращает указатель на один токен назад (если возможно).
+    /// </summary>
+    public void Rewind()
+    {
+        if (currentIndex > 0)
+        {
+            currentIndex--;
+        }
+    }
 }

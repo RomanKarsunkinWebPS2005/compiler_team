@@ -129,21 +129,12 @@ public class Parser
         }
         else if (valueToken.Type == TokenType.Identifier)
         {
-            string constIdentifier = valueToken.Lexeme;
-            if (constIdentifier.Equals("belloPi", StringComparison.OrdinalIgnoreCase))
-            {
-                tokenStream.Advance();
-                constValue = 3.141592653589793m;
-            }
-            else if (constIdentifier.Equals("belloE", StringComparison.OrdinalIgnoreCase))
-            {
-                tokenStream.Advance();
-                constValue = 2.718281828459045m;
-            }
-            else
+            if (!TryGetConstantValue(valueToken.Lexeme, out constValue))
             {
                 throw new InvalidOperationException("Ожидалось константное значение (число или belloPi/belloE)");
             }
+
+            tokenStream.Advance();
         }
         else
         {
@@ -219,23 +210,14 @@ public class Parser
         }
         else
         {
-            // Expression statement - парсим выражение полностью
-            // Собираем оставшуюся часть выражения в строку и парсим
-            string exprCode = ident.Lexeme;
-            while (tokenStream.Peek().Type != TokenType.Naidu && tokenStream.Peek().Type != TokenType.EndOfFile)
-            {
-                exprCode += " " + tokenStream.Peek().Lexeme;
-                tokenStream.Advance();
-            }
-
+            // Expression statement - парсим выражение напрямую, начиная с уже прочитанного идентификатора
+            // Возвращаем токен обратно в поток для корректного парсинга
+            tokenStream.Rewind();
+            decimal value = ParseExpression();
             Expect(TokenType.Naidu, "Ожидался разделитель 'naidu!'");
-
-            // Парсим и вычисляем выражение (если нужно)
-            if (environment != null)
-            {
-                Parser exprParser = new(new TokenStream(exprCode), context, environment: null);
-                exprParser.ParseExpression();
-            }
+            
+            // Вычисляем выражение (если нужно)
+            // Значение уже вычислено при парсинге
         }
 
         return false;
@@ -277,7 +259,6 @@ public class Parser
         environment?.WriteNumber(value);
         return false;
     }
-
 
     /// <summary>
     /// Разбирает выражение верхнего уровня.
@@ -573,18 +554,13 @@ public class Parser
             string name = token.Lexeme;
 
             // Проверяем, является ли это константой
-            if (name.Equals("belloPi", StringComparison.OrdinalIgnoreCase))
+            if (TryGetConstantValue(name, out decimal constValue))
             {
-                return 3.141592653589793m;
-            }
-
-            if (name.Equals("belloE", StringComparison.OrdinalIgnoreCase))
-            {
-                return 2.718281828459045m;
+                return constValue;
             }
 
             // Проверяем, является ли это вызовом функции
-            if (tokenStream.Peek().Type == TokenType.Delimiter && tokenStream.Peek().Lexeme == "(")
+            if (IsDelimiter("("))
             {
                 return ParseFunctionCall(name);
             }
@@ -599,17 +575,11 @@ public class Parser
         }
 
         // Скобки
-        if (token.Type == TokenType.Delimiter && token.Lexeme == "(")
+        if (IsDelimiter("("))
         {
             tokenStream.Advance();
             decimal result = ParseExpression();
-
-            if (tokenStream.Peek().Type != TokenType.Delimiter || tokenStream.Peek().Lexeme != ")")
-            {
-                throw new InvalidOperationException("Ожидалась закрывающая скобка ')'");
-            }
-
-            tokenStream.Advance();
+            ExpectDelimiter(")");
             return result;
         }
 
@@ -624,18 +594,13 @@ public class Parser
     /// </summary>
     private decimal ParseFunctionCall(string functionName)
     {
-        // Уже прочитали идентификатор и открывающую скобку
-        if (tokenStream.Peek().Type != TokenType.Delimiter || tokenStream.Peek().Lexeme != "(")
-        {
-            throw new InvalidOperationException("Ожидалась открывающая скобка '('");
-        }
-
-        tokenStream.Advance();
+        // Уже прочитали идентификатор, ожидаем открывающую скобку
+        ExpectDelimiter("(");
 
         List<decimal> arguments = new List<decimal>();
 
         // Если сразу закрывающая скобка, то аргументов нет
-        if (tokenStream.Peek().Type == TokenType.Delimiter && tokenStream.Peek().Lexeme == ")")
+        if (IsDelimiter(")"))
         {
             tokenStream.Advance();
             return BuiltinFunctions.Invoke(functionName, arguments);
@@ -645,19 +610,14 @@ public class Parser
         arguments.Add(ParseExpression());
 
         // Читаем остальные аргументы
-        while (tokenStream.Peek().Type == TokenType.Delimiter && tokenStream.Peek().Lexeme == ",")
+        while (IsDelimiter(","))
         {
             tokenStream.Advance();
             arguments.Add(ParseExpression());
         }
 
         // Закрывающая скобка
-        if (tokenStream.Peek().Type != TokenType.Delimiter || tokenStream.Peek().Lexeme != ")")
-        {
-            throw new InvalidOperationException("Ожидалась закрывающая скобка ')' или запятая ','");
-        }
-
-        tokenStream.Advance();
+        ExpectDelimiter(")");
         return BuiltinFunctions.Invoke(functionName, arguments);
     }
 
@@ -684,16 +644,6 @@ public class Parser
         {
             throw new InvalidOperationException($"Переменная '{name}' не объявлена");
         }
-    }
-
-    private decimal GetVariableValue(string name)
-    {
-        if (!context.TryGetVariable(name, out decimal value))
-        {
-            throw new InvalidOperationException($"Неизвестная переменная: {name}");
-        }
-
-        return value;
     }
 
     private Token Expect(TokenType type, string message)
@@ -728,5 +678,38 @@ public class Parser
         }
 
         tokenStream.Advance();
+    }
+
+    /// <summary>
+    /// Проверяет, является ли текущий токен разделителем с заданным значением.
+    /// </summary>
+    private bool IsDelimiter(string lexeme)
+    {
+        Token token = tokenStream.Peek();
+        return token.Type == TokenType.Delimiter && token.Lexeme == lexeme;
+    }
+
+    /// <summary>
+    /// Пытается получить значение константы по идентификатору.
+    /// </summary>
+    /// <param name="identifier">Идентификатор константы.</param>
+    /// <param name="value">Значение константы, если она найдена.</param>
+    /// <returns>true, если идентификатор является константой; иначе false.</returns>
+    private bool TryGetConstantValue(string identifier, out decimal value)
+    {
+        if (identifier.Equals("belloPi", StringComparison.OrdinalIgnoreCase))
+        {
+            value = 3.141592653589793m;
+            return true;
+        }
+
+        if (identifier.Equals("belloE", StringComparison.OrdinalIgnoreCase))
+        {
+            value = 2.718281828459045m;
+            return true;
+        }
+
+        value = 0;
+        return false;
     }
 }
