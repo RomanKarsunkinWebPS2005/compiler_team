@@ -5,10 +5,15 @@ namespace Lexer;
 public struct LexicalData
 {
     public int Keywords { get; set; }
+
     public int Identifiers { get; set; }
+
     public int NumberLiterals { get; set; }
+
     public int StringLiterals { get; set; }
+
     public int Operators { get; set; }
+
     public int OtherLexemes { get; set; }
 
     public override readonly string ToString()
@@ -29,32 +34,48 @@ public static class LexicalStats
     public static string CollectFromFile(string path)
     {
         if (!File.Exists(path))
+        {
             throw new FileNotFoundException("Файл не найден", path);
+        }
 
         string text = File.ReadAllText(path, Encoding.UTF8);
         Lexer lexer = new Lexer(text);
         IReadOnlyList<Token> tokens = lexer.Tokenize();
 
-        LexicalData stats = new LexicalData();
+        LexicalData stats = default;
         HashSet<string> seenIdentifiers = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (Token token in tokens)
         {
             switch (token.Type)
             {
-                case TokenType.Keyword:
-                    if (string.Equals(token.Lexeme, "bello!", StringComparison.Ordinal))
-                    {
-                        break;
-                    }
-                    if (string.Equals(token.Lexeme, "loka", StringComparison.Ordinal))
-                    {
-                        stats.OtherLexemes++;
-                    }
-                    else
-                    {
-                        stats.Keywords++;
-                    }
+                case TokenType.Bello:
+                    // bello! не считается ключевым словом для статистики
+                    break;
+                case TokenType.Loka:
+                    stats.OtherLexemes++;
+                    break;
+                case TokenType.Oca:
+                case TokenType.Stopa:
+                case TokenType.Bapple:
+                case TokenType.Poop:
+                case TokenType.Trusela:
+                case TokenType.BiDo:
+                case TokenType.UhOh:
+                case TokenType.Again:
+                case TokenType.Kemari:
+                case TokenType.Aspetta:
+                case TokenType.Tulalilloo:
+                case TokenType.Ti:
+                case TokenType.Amo:
+                case TokenType.Guoleila:
+                case TokenType.Tank:
+                case TokenType.Yu:
+                case TokenType.BooYa:
+                case TokenType.Naidu:
+                case TokenType.Da:
+                case TokenType.No:
+                    stats.Keywords++;
                     break;
                 case TokenType.Identifier:
                     if (IsTypeName(token.Lexeme))
@@ -65,6 +86,7 @@ public static class LexicalStats
                     {
                         stats.Identifiers++;
                     }
+
                     break;
                 case TokenType.NumberLiteral:
                     stats.NumberLiterals++;
@@ -74,6 +96,9 @@ public static class LexicalStats
                     break;
                 case TokenType.Operator:
                     stats.Operators++;
+                    break;
+                case TokenType.Error:
+                    stats.OtherLexemes++;
                     break;
                 case TokenType.Whitespace:
                 case TokenType.Comment:
@@ -95,5 +120,3 @@ public static class LexicalStats
             || string.Equals(lexeme, "Spaghetti", StringComparison.Ordinal);
     }
 }
-
-

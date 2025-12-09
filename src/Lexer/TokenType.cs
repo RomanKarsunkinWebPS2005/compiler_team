@@ -1,9 +1,8 @@
-﻿namespace Lexer;
+namespace Lexer;
 
 public enum TokenType
 {
     Identifier,
-    Keyword,
     NumberLiteral,
     StringLiteral,
     Operator,
@@ -11,7 +10,30 @@ public enum TokenType
     Comment,
     Whitespace,
     EndOfFile,
-    Unknown
+    Error,
+
+    // Ключевые слова
+    Bello,
+    Oca,
+    Stopa,
+    Bapple,
+    Poop,
+    Trusela,
+    Boss,
+    BiDo,
+    UhOh,
+    Again,
+    Kemari,
+    Aspetta,
+    Tulalilloo,
+    Ti,
+    Amo,
+    Guoleila,
+    Tank,
+    Yu,
+    BooYa,
+    Naidu,
+    Loka,
+    Da,
+    No,
 }
-
-
