@@ -483,7 +483,12 @@ public class Parser
 
             BinaryExpression.BinaryOperator? binaryOp = null;
 
-            if (token.Lexeme == "la")
+            if (token.Lexeme == "lacon")
+            {
+                tokenStream.Advance();
+                binaryOp = BinaryExpression.BinaryOperator.LessThanOrEqual;
+            }
+            else if (token.Lexeme == "la")
             {
                 tokenStream.Advance();
                 bool hasCon = IsOperator("con");
@@ -811,7 +816,18 @@ public class Parser
         Token token = tokenStream.Peek();
         if (token.Type != TokenType.Delimiter || token.Lexeme != lexeme)
         {
-            throw new InvalidOperationException($"Ожидался разделитель '{lexeme}'");
+            string actualToken = token.Type == TokenType.EndOfFile 
+                ? "конец файла" 
+                : $"'{token.Lexeme}' (тип: {token.Type})";
+            
+            // Получаем имя метода, который вызвал ExpectDelimiter
+            System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(skipFrames: 1);
+            string callingMethod = stackTrace.GetFrame(0)?.GetMethod()?.Name ?? "unknown";
+            
+            throw new InvalidOperationException(
+                $"Ожидался разделитель '{lexeme}', но встречен: {actualToken}. " +
+                $"Позиция токена: {token.Position}. " +
+                $"Вызвано из метода: {callingMethod}");
         }
 
         tokenStream.Advance();

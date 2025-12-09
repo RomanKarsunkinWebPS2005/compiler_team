@@ -49,6 +49,12 @@ public class InterpreterSteps
         catch (Exception ex)
         {
             _outputWriter.WriteLine($"Ошибка: {ex.Message}");
+
+            // Выводим полный стек вызовов для отладки
+            if (ex.StackTrace != null)
+            {
+                _outputWriter.WriteLine($"StackTrace: {ex.StackTrace}");
+            }
         }
         finally
         {
