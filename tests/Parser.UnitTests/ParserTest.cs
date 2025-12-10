@@ -129,7 +129,7 @@ public class ParserTest
             { "5 con 5", [1m] },
             { "5 nocon 10", [1m] },
             { "5 la 10", [1m] },
-            { "5 la con 5", [1m] },
+            { "5 lacon 5", [1m] },
             { "10 looka too 5", [1m] },
             { "10 looka too con 10", [1m] },
             { "da tropa no", [0m] },
@@ -309,7 +309,7 @@ public class ParserTest
                 bello!
                 poop i Papaya naidu!
                 i lumai 0 naidu!
-                kemari (i la con 5) oca!
+                kemari (i lacon 5) oca!
                     tulalilloo ti amo (i) naidu!
                     i lumai i melomo 1 naidu!
                 stopa
@@ -413,7 +413,7 @@ public class ParserTest
                     poop i Papaya naidu!
                     sum lumai 0 naidu!
                     i lumai 1 naidu!
-                    kemari (i la con n) oca!
+                    kemari (i lacon n) oca!
                         sum lumai sum melomo i naidu!
                         i lumai i melomo 1 naidu!
                     stopa
@@ -436,7 +436,7 @@ public class ParserTest
                     poop i Papaya naidu!
                     result lumai 1 naidu!
                     i lumai 1 naidu!
-                    kemari (i la con n) oca!
+                    kemari (i lacon n) oca!
                         result lumai result dibotada i naidu!
                         i lumai i melomo 1 naidu!
                     stopa
