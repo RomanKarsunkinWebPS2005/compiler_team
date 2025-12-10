@@ -18,8 +18,7 @@ public class ParserTest
         Context context = new Context();
         AstEvaluator evaluator = new AstEvaluator(context, new FakeEnvironment());
         decimal result = evaluator.EvaluateExpression(expr);
-        int expectedInt = (int)expected[0];
-        Assert.Equal(expectedInt, (int)result);
+        Assert.Equal(expected[0], result);
     }
 
     /// <summary>
@@ -117,9 +116,9 @@ public class ParserTest
             { "10 dibotada 5 poopaye 2", [25m] },
             { "10 pado 2", [0m] },
             { "10 pado 3", [1m] },
-            { "1.128 melomo 8 flavuk 7.5", [1m] }, // 1.628 -> 1 при приведении к int
+            { "1.128 melomo 8 flavuk 7.5", [1.628m] }, // 1.128 + 8 - 7.5 = 1.628
             { "2 beedo 5", [32m] },
-            { "(2 melomo 3) poopaye 10", [0m] }, // 0.5 -> 0 при приведении к int
+            { "(2 melomo 3) poopaye 10", [0.5m] }, // (2 + 3) / 10 = 0.5
             { "(flavuk 2) beedo 10", [1024m] },
             { "flavuk 2 beedo 10", [-1024m] },
 
