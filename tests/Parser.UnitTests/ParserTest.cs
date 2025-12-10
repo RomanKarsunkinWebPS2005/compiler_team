@@ -14,9 +14,8 @@ public class ParserTest
     public void ParseExpressionTest(string code, List<decimal> expected)
     {
         Parser parser = new(new TokenStream(""));
-        int result = parser.EvaluateExpression(code);
-        int expectedInt = (int)expected[0];
-        Assert.Equal(expectedInt, result);
+        decimal result = parser.EvaluateExpression(code);
+        Assert.Equal(expected[0], result);
     }
 
     /// <summary>
@@ -95,9 +94,9 @@ public class ParserTest
             { "10 dibotada 5 poopaye 2", [25m] },
             { "10 pado 2", [0m] },
             { "10 pado 3", [1m] },
-            { "1.128 melomo 8 flavuk 7.5", [1m] }, // 1.628 -> 1 при приведении к int
+            { "1.128 melomo 8 flavuk 7.5", [1.628m] },
             { "2 beedo 5", [32m] },
-            { "(2 melomo 3) poopaye 10", [0m] }, // 0.5 -> 0 при приведении к int
+            { "(2 melomo 3) poopaye 10", [0.5m] },
             { "(flavuk 2) beedo 10", [1024m] },
             { "flavuk 2 beedo 10", [-1024m] },
 

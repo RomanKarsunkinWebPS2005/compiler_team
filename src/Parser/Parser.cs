@@ -61,7 +61,7 @@ public class Parser
     /// <param name="code">Исходный код выражения.</param>
     /// <param name="variables">Словарь значений переменных (опционально, для обратной совместимости).</param>
     /// <returns>Результат вычисления выражения.</returns>
-    public int EvaluateExpression(string code, Dictionary<string, decimal>? variables = null)
+    public decimal EvaluateExpression(string code, Dictionary<string, decimal>? variables = null)
     {
         Context ctx = new Context();
         if (variables != null)
@@ -83,7 +83,7 @@ public class Parser
             throw new InvalidOperationException($"Неожиданный токен после выражения: {remainingToken}");
         }
 
-        return (int)result;
+        return result;
     }
 
     private void ParseProgramInternal()
