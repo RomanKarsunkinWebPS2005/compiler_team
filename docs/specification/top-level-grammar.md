@@ -147,6 +147,7 @@ statement = variable-declaration
           | output-statement
           | if-statement
           | while-statement
+          | for-statement
           | return-statement
           | expression-statement
           , "naidu!" ;
@@ -168,6 +169,9 @@ if-statement = "bi-do" , "(" , expression , ")" , block , [ "uh-oh" , block ] ;
 
 (* Цикл while *)
 while-statement = "kemari" , "(" , expression , ")" , block ;
+
+(* Цикл for *)
+for-statement = "again" , "(" , identifier , "=" , expression , "to" , expression , ")" , block ;
 
 (* Возврат из функции *)
 return-statement = "tank yu" , expression ;

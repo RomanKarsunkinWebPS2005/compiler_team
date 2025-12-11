@@ -343,6 +343,97 @@ public class ParserTest
                 [0m, 1m]
             },
 
+            // For цикл - простой случай
+            {
+                """
+                bello!
+                again (i = 1 to 5) oca!
+                    tulalilloo ti amo (i) naidu!
+                stopa
+                """,
+                [1m, 2m, 3m, 4m, 5m]
+            },
+
+            // For цикл - с выражениями в границах
+            {
+                """
+                bello!
+                poop start Papaya naidu!
+                poop end Papaya naidu!
+                start lumai 2 naidu!
+                end lumai 4 naidu!
+                again (i = start to end) oca!
+                    tulalilloo ti amo (i) naidu!
+                stopa
+                """,
+                [2m, 3m, 4m]
+            },
+
+            // For цикл - с вычислением границ через выражения
+            {
+                """
+                bello!
+                again (i = 1 melomo 1 to 2 dibotada 2) oca!
+                    tulalilloo ti amo (i) naidu!
+                stopa
+                """,
+                [2m, 3m, 4m] // от 1+1=2 до 2*2=4
+            },
+
+            // For цикл - вложенные циклы
+            {
+                """
+                bello!
+                again (i = 1 to 2) oca!
+                    again (j = 1 to 2) oca!
+                        tulalilloo ti amo (i dibotada 10 melomo j) naidu!
+                    stopa
+                stopa
+                """,
+                [11m, 12m, 21m, 22m] // i=1: j=1→11, j=2→12; i=2: j=1→21, j=2→22
+            },
+
+            // For цикл - с if внутри
+            {
+                """
+                bello!
+                again (i = 1 to 5) oca!
+                    bi-do (i pado 2 con 0) oca!
+                        tulalilloo ti amo (i) naidu!
+                    stopa
+                stopa
+                """,
+                [2m, 4m] // только четные числа
+            },
+
+            // For цикл - с переменными в теле
+            {
+                """
+                bello!
+                poop sum Papaya naidu!
+                sum lumai 0 naidu!
+                again (i = 1 to 3) oca!
+                    sum lumai sum melomo i naidu!
+                stopa
+                tulalilloo ti amo (sum) naidu!
+                """,
+                [6m] // 0+1+2+3 = 6
+            },
+
+            // For цикл - область видимости переменной цикла
+            {
+                """
+                bello!
+                poop x Papaya naidu!
+                x lumai 10 naidu!
+                again (x = 1 to 3) oca!
+                    tulalilloo ti amo (x) naidu!
+                stopa
+                tulalilloo ti amo (x) naidu!
+                """,
+                [1m, 2m, 3m, 10m] // переменная цикла затеняет внешнюю, затем восстанавливается
+            },
+
             // Функции с разным количеством параметров
             {
                 """
@@ -444,6 +535,42 @@ public class ParserTest
                 tulalilloo ti amo (factorial(5)) naidu!
                 """,
                 [120m] // 5! = 120
+            },
+
+            // Функция с циклом for
+            {
+                """
+                bello!
+                boss sumToN Papaya (n) oca!
+                    poop sum Papaya naidu!
+                    sum lumai 0 naidu!
+                    again (i = 1 to n) oca!
+                        sum lumai sum melomo i naidu!
+                    stopa
+                    tank yu sum naidu!
+                stopa
+                tulalilloo ti amo (sumToN(5)) naidu!
+                """,
+                [15m] // 1+2+3+4+5 = 15
+            },
+
+            // Функция с вложенными циклами for
+            {
+                """
+                bello!
+                boss multiplyTable Papaya (n) oca!
+                    poop result Papaya naidu!
+                    result lumai 0 naidu!
+                    again (i = 1 to n) oca!
+                        again (j = 1 to n) oca!
+                            result lumai result melomo 1 naidu!
+                        stopa
+                    stopa
+                    tank yu result naidu!
+                stopa
+                tulalilloo ti amo (multiplyTable(2)) naidu!
+                """,
+                [4m] // 2x2 = 4 итерации
             },
 
             // Функция, вызывающая другую функцию
@@ -717,6 +844,61 @@ public class ParserTest
             bello!
             kemari (da) oca!
                 tulalilloo ti amo (1) naidu!
+            """,
+
+            // Незакрытый блок for
+            """
+            bello!
+            again (i = 1 to 5) oca!
+                tulalilloo ti amo (i) naidu!
+            """,
+
+            // Неправильный синтаксис for - отсутствие "="
+            """
+            bello!
+            again (i 1 to 5) oca!
+                tulalilloo ti amo (i) naidu!
+            stopa
+            """,
+
+            // Неправильный синтаксис for - отсутствие "to"
+            """
+            bello!
+            again (i = 1 5) oca!
+                tulalilloo ti amo (i) naidu!
+            stopa
+            """,
+
+            // Неправильный синтаксис for - отсутствие начального выражения
+            """
+            bello!
+            again (i = to 5) oca!
+                tulalilloo ti amo (i) naidu!
+            stopa
+            """,
+
+            // Неправильный синтаксис for - отсутствие конечного выражения
+            """
+            bello!
+            again (i = 1 to) oca!
+                tulalilloo ti amo (i) naidu!
+            stopa
+            """,
+
+            // Неправильный синтаксис for - отсутствие открывающей скобки
+            """
+            bello!
+            again i = 1 to 5) oca!
+                tulalilloo ti amo (i) naidu!
+            stopa
+            """,
+
+            // Неправильный синтаксис for - отсутствие закрывающей скобки
+            """
+            bello!
+            again (i = 1 to 5 oca!
+                tulalilloo ti amo (i) naidu!
+            stopa
             """,
 
             // Незакрытый блок функции - проверяется на этапе парсинга

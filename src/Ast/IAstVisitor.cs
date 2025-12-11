@@ -40,6 +40,8 @@ public interface IAstVisitor
 
     void VisitWhileStatement(WhileStatement whileStatement);
 
+    void VisitForStatement(ForStatement forStatement);
+
     void VisitReturnStatement(ReturnStatement returnStatement);
 
     void VisitBlock(Block block);

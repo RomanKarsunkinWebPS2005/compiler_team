@@ -411,6 +411,55 @@ public class AstEvaluator : IAstVisitor
         }
     }
 
+    public void VisitForStatement(ForStatement forStatement)
+    {
+        // Вычисляем начальное и конечное значения
+        decimal start = EvaluateExpression(forStatement.StartExpression);
+        decimal end = EvaluateExpression(forStatement.EndExpression);
+
+        // Создаем новую область видимости для переменной цикла
+        context.PushScope();
+
+        try
+        {
+            // Объявляем переменную цикла с начальным значением
+            if (!context.TryDefineVariable(forStatement.VariableName, start))
+            {
+                throw new InvalidOperationException(
+                    $"Переменная '{forStatement.VariableName}' уже объявлена в этой области видимости");
+            }
+
+            // Выполняем цикл: от start до end включительно
+            decimal current = start;
+            while (current <= end)
+            {
+                // Обновляем значение переменной цикла
+                if (!context.TryAssignVariable(forStatement.VariableName, current))
+                {
+                    throw new InvalidOperationException(
+                        $"Не удалось присвоить значение переменной цикла '{forStatement.VariableName}'");
+                }
+
+                try
+                {
+                    forStatement.Body.Accept(this);
+                }
+                catch (FunctionReturnException)
+                {
+                    // Пробрасываем исключение возврата из функции наверх
+                    throw;
+                }
+
+                current++;
+            }
+        }
+        finally
+        {
+            // Удаляем область видимости переменной цикла
+            context.PopScope();
+        }
+    }
+
     public void VisitReturnStatement(ReturnStatement returnStatement)
     {
         if (!isInsideFunction)

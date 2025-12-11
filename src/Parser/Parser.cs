@@ -160,6 +160,7 @@ public class Parser
     ///   | output-statement
     ///   | if-statement
     ///   | while-statement
+    ///   | for-statement
     ///   | return-statement
     ///   | expression-statement
     ///   , "naidu!" ;
@@ -182,6 +183,7 @@ public class Parser
             TokenType.Guoleila => ParseInput(),
             TokenType.BiDo => ParseIf(),
             TokenType.Kemari => ParseWhile(),
+            TokenType.Again => ParseFor(),
             TokenType.Tank => ParseReturn(),
             _ => throw new InvalidOperationException($"Неожиданный токен в инструкции: {token}")
         };
@@ -276,6 +278,45 @@ public class Parser
         Block body = ParseBlock();
 
         return new WhileStatement(condition, body);
+    }
+
+    /// <summary>
+    /// for-statement = "again" , "(" , identifier , "=" , expression , "to" , expression , ")" , block ;
+    /// </summary>
+    private ForStatement ParseFor()
+    {
+        tokenStream.Advance(); // again
+        ExpectDelimiter("(");
+        
+        Token variableToken = Expect(TokenType.Identifier, "Ожидалось имя переменной цикла");
+        string variableName = variableToken.Lexeme;
+        
+        // Проверяем оператор присваивания "="
+        Token assignToken = tokenStream.Peek();
+        if (assignToken.Type != TokenType.Delimiter || assignToken.Lexeme != "=")
+        {
+            throw new InvalidOperationException("Ожидался оператор '=' после имени переменной");
+        }
+
+        tokenStream.Advance(); // пропускаем "="
+
+        Expression startExpression = ParseExpression();
+
+        // Проверяем ключевое слово "to"
+        Token toToken = tokenStream.Peek();
+        if (toToken.Type != TokenType.Identifier || toToken.Lexeme != "to")
+        {
+            throw new InvalidOperationException("Ожидалось ключевое слово 'to' после начального выражения");
+        }
+
+        tokenStream.Advance(); // пропускаем "to"
+
+        Expression endExpression = ParseExpression();
+        ExpectDelimiter(")");
+
+        Block body = ParseBlock();
+
+        return new ForStatement(variableName, startExpression, endExpression, body);
     }
 
     /// <summary>
