@@ -36,7 +36,6 @@ public class Interpreter
             throw new ArgumentNullException(nameof(code));
         }
 
-        // Используем контекст интерпретатора согласно диаграмме UML
         Parser.Parser.ParseProgram(code, _context, _environment);
     }
 }

@@ -1,4 +1,4 @@
-using Execution;
+﻿using Execution;
 using Parser;
 using Xunit;
 
@@ -7,7 +7,7 @@ namespace Parser.UnitTests;
 public class ParserTest
 {
     /// <summary>
-    /// Тестирует парсинг выражений с проверкой результата вычисления.
+    /// Тестирует парсинг выражений с проверкой результата вычисления
     /// </summary>
     [Theory]
     [MemberData(nameof(GetExpressionTests))]
@@ -19,7 +19,7 @@ public class ParserTest
     }
 
     /// <summary>
-    /// Тестирует парсинг программ с проверкой результатов выполнения.
+    /// Тестирует парсинг программ с проверкой результатов выполнения
     /// </summary>
     [Theory]
     [MemberData(nameof(GetProgramTests))]
@@ -41,7 +41,7 @@ public class ParserTest
     }
 
     /// <summary>
-    /// Тестирует выполнение программ с вводом/выводом через FakeEnvironment.
+    /// Тестирует выполнение программ с вводом/выводом через FakeEnvironment
     /// </summary>
     [Theory]
     [MemberData(nameof(GetIoExecutionTests))]
@@ -63,7 +63,7 @@ public class ParserTest
     }
 
     /// <summary>
-    /// Тестирует обработку ошибок парсинга.
+    /// Тестирует обработку ошибок парсинга
     /// </summary>
     [Theory]
     [MemberData(nameof(GetErrorTests))]
@@ -81,7 +81,7 @@ public class ParserTest
     }
 
     /// <summary>
-    /// Тестовые данные для выражений.
+    /// Тестовые данные для выражений
     /// </summary>
     public static TheoryData<string, List<decimal>> GetExpressionTests()
     {

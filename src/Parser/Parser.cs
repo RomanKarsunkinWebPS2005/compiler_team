@@ -30,11 +30,13 @@ public class Parser
 
     /// <summary>
     /// program = "bello!" , { top-level-item } ;
+    /// Выполняет программу с новым контекстом.
     /// </summary>
+    /// <param name="code">Исходный код программы.</param>
+    /// <param name="environment">Окружение для выполнения программы.</param>
     public static void ParseProgram(string code, IEnvironment? environment = null)
     {
-        Parser parser = new(new TokenStream(code), environment: environment);
-        parser.ParseProgramInternal();
+        ParseProgram(code, new Context(), environment);
     }
 
     /// <summary>
@@ -59,7 +61,7 @@ public class Parser
     /// Выполняет синтаксический разбор и вычисление выражения.
     /// </summary>
     /// <param name="code">Исходный код выражения.</param>
-    /// <param name="variables">Словарь значений переменных (опционально, для обратной совместимости).</param>
+    /// <param name="variables">Словарь значений переменных</param>
     /// <returns>Результат вычисления выражения.</returns>
     public decimal EvaluateExpression(string code, Dictionary<string, decimal>? variables = null)
     {
