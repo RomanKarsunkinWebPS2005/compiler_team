@@ -49,7 +49,6 @@ public class Parser
         Parser parser = new Parser(stream);
         Expression result = parser.ParseExpression();
 
-        // Проверяем, что все токены обработаны
         Token remainingToken = stream.Peek();
         if (remainingToken.Type != TokenType.EndOfFile)
         {
@@ -169,7 +168,7 @@ public class Parser
     {
         Token token = tokenStream.Peek();
 
-        // Если встретили EndOfFile при попытке парсить statement, это может означать незакрытый блок
+        // Если встретили EndOfFile при попытке парсить statement это может означать незакрытый блок
         if (token.Type == TokenType.EndOfFile)
         {
             throw new InvalidOperationException("Ожидался конец блока 'stopa', но достигнут конец файла");
