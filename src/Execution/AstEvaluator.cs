@@ -28,8 +28,8 @@ internal class FunctionReturnException : Exception
 }
 
 /// <summary>
-/// Вычислитель AST, реализующий интерфейс IAstVisitor.
-/// Вычисляет выражения и выполняет инструкции, используя стековый метод для выражений.
+/// Вычислитель AST
+/// Вычисляет выражения и выполняет инструкции
 /// </summary>
 public class AstEvaluator : IAstVisitor
 {
