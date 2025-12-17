@@ -289,7 +289,6 @@ public class AstEvaluator : IAstVisitor
 
             try
             {
-                // Присваиваем значения параметрам
                 for (int i = 0; i < function.Parameters.Count; i++)
                 {
                     context.TryDefineVariable(function.Parameters[i], arguments[i]);
@@ -307,7 +306,6 @@ public class AstEvaluator : IAstVisitor
                     hasReturned = true;
                 }
 
-                // Если функция выполнилась без tank yu, выбрасываем ошибку
                 if (!hasReturned)
                 {
                     throw new InvalidOperationException("Функция должна содержать 'tank yu'");
