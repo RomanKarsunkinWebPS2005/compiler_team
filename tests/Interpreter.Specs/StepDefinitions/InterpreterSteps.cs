@@ -1,125 +1,82 @@
-#pragma warning disable SA1309 // Field names should not begin with underscore
-using System.Text;
+#pragma warning disable SA1309
 using Execution;
+
 using Interpreter;
-using Parser;
+
 using Reqnroll;
-using Xunit;
 
 namespace Interpreter.Specs.StepDefinitions;
 
+/// <summary>
+/// Шаги для тестирования интерпретатора через Reqnroll.
+/// </summary>
 [Binding]
 public class InterpreterSteps
 {
     private string? _programCode;
-    private string? _inputText;
-    private string? _expectedOutput;
     private string? _actualOutput;
-    private StringWriter? _outputWriter;
-    private StringReader? _inputReader;
-    private TextWriter? _originalOut;
+    private static readonly object ConsoleLock = new();
 
+    /// <summary>
+    /// Сохраняет код программы для выполнения.
+    /// </summary>
+    /// <param name="multilineText">Исходный код программы.</param>
     [Given(@"я написал программу:")]
     public void GivenIHaveWrittenProgram(string multilineText)
     {
-        _programCode = multilineText.Trim();
+        _programCode = multilineText;
     }
 
+    /// <summary>
+    /// Выполняет программу с заданным вводом и сохраняет результат.
+    /// </summary>
+    /// <param name="multilineText">Входные данные для программы.</param>
     [When(@"я ввожу в консоли:")]
     public void WhenIEnterInConsole(string multilineText)
     {
-        _inputText = multilineText.Trim();
-
-        // Настраиваем ввод
-        _inputReader = new StringReader(_inputText);
-
-        // Настраиваем вывод
-        _outputWriter = new StringWriter();
-        _originalOut = Console.Out;
-        Console.SetOut(_outputWriter);
-
-        // Создаем окружение с переопределенным вводом
-        TestEnvironment environment = new TestEnvironment(_inputReader, _outputWriter);
-        Interpreter interpreter = new Interpreter(environment);
-
-        try
+        if (_programCode == null)
         {
-            interpreter.Execute(_programCode!);
+            throw new InvalidOperationException("Программный код необходимо написать перед выполнением");
         }
-        catch (Exception ex)
-        {
-            _outputWriter.WriteLine($"Ошибка: {ex.Message}");
 
-            // Выводим полный стек вызовов для отладки
-            if (ex.StackTrace != null)
-            {
-                _outputWriter.WriteLine($"StackTrace: {ex.StackTrace}");
-            }
-        }
-        finally
-        {
-            // Восстанавливаем стандартный вывод
-            Console.SetOut(_originalOut!);
-            _actualOutput = _outputWriter.ToString().Trim();
-        }
+        _actualOutput = ExecuteProgram(_programCode, multilineText);
     }
 
+    /// <summary>
+    /// Проверяет, что фактический вывод соответствует ожидаемому.
+    /// </summary>
+    /// <param name="multilineText">Ожидаемый вывод программы.</param>
     [Then(@"я увижу в консоли:")]
     public void ThenIShouldSeeInConsole(string multilineText)
     {
-        _expectedOutput = multilineText.Trim();
-
-        // Нормализуем ожидаемый и фактический вывод (убираем лишние пробелы и переводы строк)
-        string normalizedExpected = NormalizeOutput(_expectedOutput);
-        string normalizedActual = NormalizeOutput(_actualOutput ?? string.Empty);
-
-        Assert.Equal(normalizedExpected, normalizedActual);
+        Assert.Equal(multilineText, _actualOutput ?? string.Empty);
     }
 
-    private static string NormalizeOutput(string output)
+    private static string ExecuteProgram(string programCode, string inputText)
     {
-        // Убираем лишние пробелы и нормализуем переводы строк
-        return string.Join(" ", output
-            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(line => line.Trim())
-            .Where(line => !string.IsNullOrWhiteSpace(line)));
-    }
+        using StringReader inputReader = new(inputText);
+        using StringWriter outputWriter = new();
 
-    private class TestEnvironment : IEnvironment
-    {
-        private readonly TextReader _input;
-        private readonly TextWriter _output;
+        TextReader originalIn = Console.In;
+        TextWriter originalOut = Console.Out;
 
-        public TestEnvironment(TextReader input, TextWriter output)
+        lock (ConsoleLock)
         {
-            _input = input;
-            _output = output;
-        }
-
-        public decimal ReadNumber()
-        {
-            string? input = _input.ReadLine();
-
-            if (string.IsNullOrWhiteSpace(input))
+            try
             {
-                throw new InvalidOperationException("Input is empty");
-            }
+                Console.SetIn(inputReader);
+                Console.SetOut(outputWriter);
 
-            if (!decimal.TryParse(
-                input,
-                System.Globalization.NumberStyles.Number,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out decimal number))
+                Interpreter interpreter = new(new ConsoleEnvironment());
+                interpreter.Execute(programCode);
+            }
+            finally
             {
-                throw new FormatException($"Invalid number format: '{input}'");
+                Console.SetIn(originalIn);
+                Console.SetOut(originalOut);
             }
-
-            return number;
         }
 
-        public void WriteNumber(decimal result)
-        {
-            _output.WriteLine(result.ToString("0.#####", System.Globalization.CultureInfo.InvariantCulture));
-        }
+        return outputWriter.ToString().TrimEnd('\r', '\n');
     }
 }
