@@ -5,9 +5,6 @@ using Reqnroll;
 
 namespace Interpreter.Specs.StepDefinitions;
 
-/// <summary>
-/// Шаги для тестирования интерпретатора через Reqnroll.
-/// </summary>
 [Binding]
 public class InterpreterSteps
 {
@@ -15,35 +12,23 @@ public class InterpreterSteps
     private string? _actualOutput;
     private static readonly object ConsoleLock = new();
 
-    /// <summary>
-    /// Сохраняет код программы для выполнения.
-    /// </summary>
-    /// <param name="multilineText">Исходный код программы.</param>
     [Given(@"я написал программу:")]
     public void GivenIHaveWrittenProgram(string multilineText)
     {
         _programCode = multilineText;
     }
 
-    /// <summary>
-    /// Выполняет программу с заданным вводом и сохраняет результат.
-    /// </summary>
-    /// <param name="multilineText">Входные данные для программы.</param>
     [When(@"я ввожу в консоли:")]
     public void WhenIEnterInConsole(string multilineText)
     {
         if (_programCode == null)
         {
-            throw new InvalidOperationException("Программный код необходимо написать перед выполнением");
+            throw new InvalidOperationException("Программный код необходимо задать перед выполнением");
         }
 
         _actualOutput = ExecuteProgram(_programCode, multilineText);
     }
 
-    /// <summary>
-    /// Проверяет, что фактический вывод соответствует ожидаемому.
-    /// </summary>
-    /// <param name="multilineText">Ожидаемый вывод программы.</param>
     [Then(@"я увижу в консоли:")]
     public void ThenIShouldSeeInConsole(string multilineText)
     {
