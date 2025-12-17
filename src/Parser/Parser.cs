@@ -1,4 +1,8 @@
 using System.Globalization;
+using Ast;
+using Ast.Declarations;
+using Ast.Expressions;
+using Ast.Statements;
 using Execution;
 using Lexer;
 
@@ -12,102 +16,74 @@ namespace Parser;
 public class Parser
 {
     private readonly TokenStream tokenStream;
-    private readonly Context context;
-    private readonly IEnvironment? environment;
-    private bool syntaxOnlyMode;
 
     /// <summary>
     /// Инициализирует новый экземпляр класса <see cref="Parser"/>.
     /// </summary>
     /// <param name="tokenStream">Поток токенов для разбора.</param>
-    /// <param name="context">Контекст выполнения с областями видимости (опционально).</param>
-    /// <param name="environment">Окружение для выполнения программы (опционально).</param>
-    public Parser(TokenStream tokenStream, Context? context = null, IEnvironment? environment = null)
+    public Parser(TokenStream tokenStream)
     {
         this.tokenStream = tokenStream ?? throw new ArgumentNullException(nameof(tokenStream));
-        this.context = context ?? new Context();
-        this.environment = environment;
     }
 
     /// <summary>
     /// program = "bello!" , { top-level-item } ;
-    /// </summary>
-    public static void ParseProgram(string code, IEnvironment? environment = null)
-    {
-        Parser parser = new(new TokenStream(code), environment: environment);
-        parser.ParseProgramInternal();
-    }
-
-    /// <summary>
-    /// program = "bello!" , { top-level-item } ;
-    /// Выполняет программу с использованием указанного контекста и окружения.
+    /// Парсит программу и возвращает список узлов AST верхнего уровня.
     /// </summary>
     /// <param name="code">Исходный код программы.</param>
-    /// <param name="context">Контекст выполнения с областями видимости.</param>
-    /// <param name="environment">Окружение для выполнения программы.</param>
-    public static void ParseProgram(string code, Context context, IEnvironment? environment = null)
+    /// <returns>Список узлов AST верхнего уровня.</returns>
+    public static IReadOnlyList<AstNode> ParseProgram(string code)
     {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
-
-        Parser parser = new(new TokenStream(code), context, environment);
-        parser.ParseProgramInternal();
+        Parser parser = new(new TokenStream(code));
+        return parser.ParseProgramInternal();
     }
 
     /// <summary>
-    /// Выполняет синтаксический разбор и вычисление выражения.
+    /// Парсит выражение и возвращает AST узел.
     /// </summary>
     /// <param name="code">Исходный код выражения.</param>
-    /// <param name="variables">Словарь значений переменных (опционально, для обратной совместимости).</param>
-    /// <returns>Результат вычисления выражения.</returns>
-    public int EvaluateExpression(string code, Dictionary<string, decimal>? variables = null)
+    /// <returns>AST узел выражения.</returns>
+    public static Expression ParseExpression(string code)
     {
-        Context ctx = new Context();
-        if (variables != null)
-        {
-            foreach (KeyValuePair<string, decimal> kvp in variables)
-            {
-                ctx.TryDefineVariable(kvp.Key, kvp.Value);
-            }
-        }
-
         TokenStream stream = new TokenStream(code);
-        Parser parser = new Parser(stream, ctx);
-        decimal result = parser.ParseExpression();
+        Parser parser = new Parser(stream);
+        Expression result = parser.ParseExpression();
 
-        // Проверяем, что все токены обработаны
         Token remainingToken = stream.Peek();
         if (remainingToken.Type != TokenType.EndOfFile)
         {
             throw new InvalidOperationException($"Неожиданный токен после выражения: {remainingToken}");
         }
 
-        return (int)result;
+        return result;
     }
 
-    private void ParseProgramInternal()
+    private IReadOnlyList<AstNode> ParseProgramInternal()
     {
         Expect(TokenType.Bello, "Ожидался старт программы 'bello!'");
 
+        List<AstNode> topLevelItems = new List<AstNode>();
+
         while (tokenStream.Peek().Type != TokenType.EndOfFile)
         {
-            ParseTopLevelItem(trackReturn: false);
+            AstNode item = ParseTopLevelItem();
+            topLevelItems.Add(item);
         }
+
+        return topLevelItems;
     }
 
     /// <summary>
     /// top-level-item = const-declaration | function-definition | statement ;
     /// </summary>
-    private bool ParseTopLevelItem(bool trackReturn)
+    private AstNode ParseTopLevelItem()
     {
         Token token = tokenStream.Peek();
         return token.Type switch
         {
             TokenType.Trusela => ParseConstDeclaration(),
             TokenType.Boss => ParseFunctionDefinition(),
-            _ => ParseStatement(trackReturn)
+            _ => ParseStatement()
         };
     }
 
@@ -115,69 +91,64 @@ public class Parser
     /// const-declaration = "trusela" , identifier , "Papaya" , const-value , "naidu!" ;
     /// const-value = number-literal | constant ;
     /// </summary>
-    private bool ParseConstDeclaration()
+    private ConstDeclaration ParseConstDeclaration()
     {
         tokenStream.Advance(); // trusela
         Token constName = Expect(TokenType.Identifier, "Ожидалось имя константы после 'trusela'");
         ExpectIdentifierLexeme("Papaya", "Ожидался тип Papaya в объявлении константы");
 
-        Token valueToken = tokenStream.Peek();
-        decimal constValue;
-
-        if (valueToken.Type == TokenType.NumberLiteral)
-        {
-            tokenStream.Advance();
-            constValue = decimal.Parse(valueToken.Lexeme, CultureInfo.InvariantCulture);
-        }
-        else if (valueToken.Type == TokenType.Identifier)
-        {
-            string constIdentifier = valueToken.Lexeme;
-            if (constIdentifier.Equals("belloPi", StringComparison.OrdinalIgnoreCase))
-            {
-                tokenStream.Advance();
-                constValue = 3.141592653589793m;
-            }
-            else if (constIdentifier.Equals("belloE", StringComparison.OrdinalIgnoreCase))
-            {
-                tokenStream.Advance();
-                constValue = 2.718281828459045m;
-            }
-            else
-            {
-                throw new InvalidOperationException("Ожидалось константное значение (число или belloPi/belloE)");
-            }
-        }
-        else
-        {
-            throw new InvalidOperationException("Ожидалось константное значение (число или belloPi/belloE)");
-        }
+        Expression value = ParseConstValue();
 
         Expect(TokenType.Naidu, "Ожидался разделитель 'naidu!'");
 
-        // Сохраняем константу в контекст
-        if (environment != null)
-        {
-            if (!context.TryDefineVariable(constName.Lexeme, constValue))
-            {
-                throw new InvalidOperationException($"Константа '{constName.Lexeme}' уже объявлена в этой области видимости");
-            }
-        }
+        return new ConstDeclaration(constName.Lexeme, value);
+    }
 
-        return false;
+    /// <summary>
+    /// Парсит значение константы (number-literal | constant).
+    /// </summary>
+    private Expression ParseConstValue()
+    {
+        Token valueToken = tokenStream.Peek();
+
+        return valueToken.Type switch
+        {
+            TokenType.NumberLiteral => ParseNumberLiteral(),
+            TokenType.Identifier => ParseConstantIdentifier(valueToken.Lexeme),
+            _ => throw new InvalidOperationException("Ожидалось константное значение (число или belloPi/belloE)")
+        };
+    }
+
+    private NumberLiteral ParseNumberLiteral()
+    {
+        Token token = tokenStream.Peek();
+        tokenStream.Advance();
+        decimal value = decimal.Parse(token.Lexeme, CultureInfo.InvariantCulture);
+        return new NumberLiteral(value);
+    }
+
+    private Expression ParseConstantIdentifier(string identifier)
+    {
+        tokenStream.Advance();
+
+        return identifier.Equals("belloPi", StringComparison.OrdinalIgnoreCase)
+            ? new Constant(Constant.ConstantType.Pi)
+            : identifier.Equals("belloE", StringComparison.OrdinalIgnoreCase)
+                ? new Constant(Constant.ConstantType.E)
+                : throw new InvalidOperationException("Ожидалось константное значение (число или belloPi/belloE)");
     }
 
     /// <summary>
     /// variable-declaration = "poop" , identifier , "Papaya" , "naidu!" ;
     /// </summary>
-    private bool ParseVarDeclaration()
+    private VariableDeclaration ParseVarDeclaration()
     {
         tokenStream.Advance(); // poop
         Token name = Expect(TokenType.Identifier, "Ожидалось имя переменной после 'poop'");
         ExpectIdentifierLexeme("Papaya", "Ожидался тип Papaya в объявлении переменной");
         Expect(TokenType.Naidu, "Ожидался разделитель 'naidu!'");
 
-        DefineVariable(name.Lexeme);
-        return false;
+        return new VariableDeclaration(name.Lexeme);
     }
 
     /// <summary>
@@ -188,13 +159,20 @@ public class Parser
     ///   | output-statement
     ///   | if-statement
     ///   | while-statement
+    ///   | for-statement
     ///   | return-statement
     ///   | expression-statement
     ///   , "naidu!" ;
     /// </summary>
-    private bool ParseStatement(bool trackReturn)
+    private Statement ParseStatement()
     {
         Token token = tokenStream.Peek();
+
+        // Если встретили EndOfFile при попытке парсить statement это может означать незакрытый блок
+        if (token.Type == TokenType.EndOfFile)
+        {
+            throw new InvalidOperationException("Ожидался конец блока 'stopa', но достигнут конец файла");
+        }
 
         return token.Type switch
         {
@@ -202,9 +180,10 @@ public class Parser
             TokenType.Identifier => ParseAssignmentOrExpressionStatement(),
             TokenType.Tulalilloo => ParseOutput(),
             TokenType.Guoleila => ParseInput(),
-            TokenType.BiDo => ParseIf(trackReturn),
-            TokenType.Kemari => ParseWhile(trackReturn),
-            TokenType.Tank => ParseReturn(trackReturn),
+            TokenType.BiDo => ParseIf(),
+            TokenType.Kemari => ParseWhile(),
+            TokenType.Again => ParseFor(),
+            TokenType.Tank => ParseReturn(),
             _ => throw new InvalidOperationException($"Неожиданный токен в инструкции: {token}")
         };
     }
@@ -213,46 +192,31 @@ public class Parser
     /// assignment-statement = identifier , "lumai" , expression , "naidu!" ;
     /// expression-statement = expression , "naidu!" ;
     /// </summary>
-    private bool ParseAssignmentOrExpressionStatement()
+    private Statement ParseAssignmentOrExpressionStatement()
     {
         Token ident = tokenStream.Peek();
         tokenStream.Advance();
 
-        if (tokenStream.Peek().Type == TokenType.Operator && tokenStream.Peek().Lexeme == "lumai")
+        Token nextToken = tokenStream.Peek();
+        if (nextToken.Type == TokenType.Operator && nextToken.Lexeme == "lumai")
         {
             tokenStream.Advance(); // lumai
-            decimal value = ParseExpression();
+            Expression value = ParseExpression();
             Expect(TokenType.Naidu, "Ожидался разделитель 'naidu!'");
-            AssignVariable(ident.Lexeme, value);
-        }
-        else
-        {
-            // Expression statement - парсим выражение полностью
-            // Собираем оставшуюся часть выражения в строку и парсим
-            string exprCode = ident.Lexeme;
-            while (tokenStream.Peek().Type != TokenType.Naidu && tokenStream.Peek().Type != TokenType.EndOfFile)
-            {
-                exprCode += " " + tokenStream.Peek().Lexeme;
-                tokenStream.Advance();
-            }
-
-            Expect(TokenType.Naidu, "Ожидался разделитель 'naidu!'");
-
-            // Парсим и вычисляем выражение (если нужно)
-            if (environment != null)
-            {
-                Parser exprParser = new(new TokenStream(exprCode), context, environment: null);
-                exprParser.ParseExpression();
-            }
+            return new AssignmentStatement(ident.Lexeme, value);
         }
 
-        return false;
+        // Expression statement - нужно вернуть токен обратно и парсить как выражение
+        tokenStream.Back();
+        Expression expr = ParseExpression();
+        Expect(TokenType.Naidu, "Ожидался разделитель 'naidu!'");
+        return new ExpressionStatement(expr);
     }
 
     /// <summary>
     /// input-statement = "guoleila" , "(", identifier , ")", "naidu!" ;
     /// </summary>
-    private bool ParseInput()
+    private InputStatement ParseInput()
     {
         tokenStream.Advance(); // guoleila
         ExpectDelimiter("(");
@@ -260,300 +224,179 @@ public class Parser
         ExpectDelimiter(")");
         Expect(TokenType.Naidu, "Ожидался разделитель 'naidu!'");
 
-        if (environment != null)
-        {
-            decimal value = environment.ReadNumber();
-            AssignVariable(name.Lexeme, value);
-        }
-
-        return false;
+        return new InputStatement(name.Lexeme);
     }
 
     /// <summary>
     /// output-statement = "tulalilloo" , "ti" , "amo" , "(" , expression , ")" , "naidu!" ;
     /// </summary>
-    private bool ParseOutput()
+    private OutputStatement ParseOutput()
     {
         tokenStream.Advance(); // tulalilloo
         Expect(TokenType.Ti, "Ожидалось 'ti'");
         Expect(TokenType.Amo, "Ожидалось 'amo'");
         ExpectDelimiter("(");
-        decimal value = ParseExpression();
+        Expression expr = ParseExpression();
         ExpectDelimiter(")");
         Expect(TokenType.Naidu, "Ожидался разделитель 'naidu!'");
 
-        environment?.WriteNumber(value);
-        return false;
+        return new OutputStatement(expr);
     }
 
     /// <summary>
     /// if-statement = "bi-do" , "(" , expression , ")" , block , [ "uh-oh" , block ] ;
     /// </summary>
-    private bool ParseIf(bool trackReturn)
+    private IfStatement ParseIf()
     {
         tokenStream.Advance(); // bi-do
         ExpectDelimiter("(");
-        decimal condition = ParseExpression(); // Вычисляем условие
+        Expression condition = ParseExpression();
         ExpectDelimiter(")");
 
-        bool thenReturn = false;
+        Block thenBlock = ParseBlock();
 
-        // Условие истинно - выполняем then блок
-        if (condition != 0)
+        Block? elseBlock = null;
+        if (tokenStream.Peek().Type == TokenType.UhOh)
         {
-            thenReturn = ParseBlock(trackReturn);
-
-            // Пропускаем else блок, если он есть (парсим для синтаксиса, но не выполняем)
-            if (tokenStream.Peek().Type == TokenType.UhOh)
-            {
-                tokenStream.Advance();
-                ParseBlock(trackReturn: false);
-            }
-        }
-        else
-        {
-            // Условие ложно - пропускаем then блок, выполняем else если есть
-            // Парсим then блок для синтаксической проверки, но не выполняем statements
-            ParseBlockWithoutExecution();
-
-            if (tokenStream.Peek().Type == TokenType.UhOh)
-            {
-                tokenStream.Advance();
-                thenReturn = ParseBlock(trackReturn);
-            }
+            tokenStream.Advance();
+            elseBlock = ParseBlock();
         }
 
-        return thenReturn;
-    }
-
-    /// <summary>
-    /// Парсит блок без выполнения statements (только для синтаксической проверки).
-    /// </summary>
-    private void ParseBlockWithoutExecution()
-    {
-        Expect(TokenType.Oca, "Ожидался старт блока 'oca!'");
-        bool oldSyntaxOnlyMode = syntaxOnlyMode;
-        syntaxOnlyMode = true;
-
-        try
-        {
-            while (tokenStream.Peek().Type != TokenType.Stopa && tokenStream.Peek().Type != TokenType.EndOfFile)
-            {
-            // Пропускаем все statements в блоке
-            Token token = tokenStream.Peek();
-            if (token.Type == TokenType.Poop)
-            {
-                tokenStream.Advance(); // poop
-                Expect(TokenType.Identifier, "");
-                ExpectIdentifierLexeme("Papaya", "");
-                Expect(TokenType.Naidu, "");
-            }
-            else if (token.Type == TokenType.Identifier)
-            {
-                tokenStream.Advance();
-                if (tokenStream.Peek().Type == TokenType.Operator && tokenStream.Peek().Lexeme == "lumai")
-                {
-                    tokenStream.Advance(); // lumai
-                    ParseExpression();
-                    Expect(TokenType.Naidu, "");
-                }
-                else
-                {
-                    ParseExpression();
-                    Expect(TokenType.Naidu, "");
-                }
-            }
-            else if (token.Type == TokenType.Tulalilloo)
-            {
-                tokenStream.Advance(); // tulalilloo
-                Expect(TokenType.Ti, "");
-                Expect(TokenType.Amo, "");
-                ExpectDelimiter("(");
-                ParseExpression();
-                ExpectDelimiter(")");
-                Expect(TokenType.Naidu, "");
-            }
-            else if (token.Type == TokenType.Guoleila)
-            {
-                tokenStream.Advance(); // guoleila
-                ExpectDelimiter("(");
-                Expect(TokenType.Identifier, "");
-                ExpectDelimiter(")");
-                Expect(TokenType.Naidu, "");
-            }
-            else if (token.Type == TokenType.BiDo)
-            {
-                // Парсим if без выполнения (только синтаксическая проверка)
-                tokenStream.Advance(); // bi-do
-                ExpectDelimiter("(");
-                ParseExpression(); // Условие
-                ExpectDelimiter(")");
-                ParseBlockWithoutExecution(); // Then блок
-                if (tokenStream.Peek().Type == TokenType.UhOh)
-                {
-                    tokenStream.Advance();
-                    ParseBlockWithoutExecution(); // Else блок
-                }
-            }
-            else if (token.Type == TokenType.Kemari)
-            {
-                // Парсим while без выполнения (только синтаксическая проверка)
-                tokenStream.Advance(); // kemari
-                ExpectDelimiter("(");
-                ParseExpression(); // Условие
-                ExpectDelimiter(")");
-                ParseBlockWithoutExecution(); // Блок цикла
-            }
-            else
-            {
-                throw new InvalidOperationException($"Неожиданный токен: {token}");
-            }
-            }
-        }
-        finally
-        {
-            syntaxOnlyMode = oldSyntaxOnlyMode;
-        }
-
-        Expect(TokenType.Stopa, "Ожидался конец блока 'stopa'");
+        return new IfStatement(condition, thenBlock, elseBlock);
     }
 
     /// <summary>
     /// while-statement = "kemari" , "(" , expression , ")" , block ;
     /// </summary>
-    private bool ParseWhile(bool trackReturn)
+    private WhileStatement ParseWhile()
     {
         tokenStream.Advance(); // kemari
+        ExpectDelimiter("(");
+        Expression condition = ParseExpression();
+        ExpectDelimiter(")");
+        Block body = ParseBlock();
 
-        // Сохраняем позицию начала условия для повторной проверки
-        int conditionStart = tokenStream.Peek().Position;
-        bool bodyReturn = false;
+        return new WhileStatement(condition, body);
+    }
 
-        while (true)
+    /// <summary>
+    /// for-statement = "again" , "(" , identifier , "=" , expression , "to" , expression , ")" , block ;
+    /// </summary>
+    private ForStatement ParseFor()
+    {
+        tokenStream.Advance(); // again
+        ExpectDelimiter("(");
+        
+        Token variableToken = Expect(TokenType.Identifier, "Ожидалось имя переменной цикла");
+        string variableName = variableToken.Lexeme;
+        
+        // Проверяем оператор присваивания "="
+        Token assignToken = tokenStream.Peek();
+        if (assignToken.Type != TokenType.Delimiter || assignToken.Lexeme != "=")
         {
-            ExpectDelimiter("(");
-            decimal condition = ParseExpression(); // Вычисляем условие
-            ExpectDelimiter(")");
-
-            // Условие ложно - выходим из цикла
-            if (condition == 0)
-            {
-                // Парсим блок для синтаксической проверки, но не выполняем
-                ParseBlockWithoutExecution();
-                break;
-            }
-
-            // Условие истинно - выполняем блок
-            bodyReturn = ParseBlock(trackReturn) || bodyReturn;
-
-            // После выполнения блока нужно снова проверить условие
-            // Но мы не можем вернуться назад в токен-стриме
-            // Поэтому цикл выполняется только один раз
-            // Для правильной реализации нужна более сложная логика
-            break; // Временно: выполняем только одну итерацию
+            throw new InvalidOperationException("Ожидался оператор '=' после имени переменной");
         }
 
-        return bodyReturn;
+        tokenStream.Advance(); // пропускаем "="
+
+        Expression startExpression = ParseExpression();
+
+        // Проверяем ключевое слово "to"
+        Token toToken = tokenStream.Peek();
+        if (toToken.Type != TokenType.Identifier || toToken.Lexeme != "to")
+        {
+            throw new InvalidOperationException("Ожидалось ключевое слово 'to' после начального выражения");
+        }
+
+        tokenStream.Advance(); // пропускаем "to"
+
+        Expression endExpression = ParseExpression();
+        ExpectDelimiter(")");
+
+        Block body = ParseBlock();
+
+        return new ForStatement(variableName, startExpression, endExpression, body);
     }
 
     /// <summary>
     /// return-statement = "tank" , "yu" , expression , "naidu!" ;
     /// </summary>
-    private bool ParseReturn(bool trackReturn)
+    private ReturnStatement ParseReturn()
     {
-        if (!trackReturn)
-        {
-            throw new InvalidOperationException("Ожидался tank yu только внутри функции");
-        }
-
         tokenStream.Advance(); // tank
         Expect(TokenType.Yu, "Ожидалось 'yu' после 'tank'");
-        ParseExpression(); // Значение возврата (не используется, но парсится)
+        Expression expr = ParseExpression();
         Expect(TokenType.Naidu, "Ожидался разделитель 'naidu!'");
-        return true;
+        return new ReturnStatement(expr);
     }
 
     /// <summary>
     /// function-definition = "boss" , identifier , "Papaya" , "(" , [ parameter-list ] , ")" , block ;
     /// parameter-list = identifier , { \",\" , identifier } ;
     /// </summary>
-    private bool ParseFunctionDefinition()
+    private FunctionDefinition ParseFunctionDefinition()
     {
         tokenStream.Advance(); // boss
-        Expect(TokenType.Identifier, "Ожидалось имя функции после 'boss'");
+        Token functionName = Expect(TokenType.Identifier, "Ожидалось имя функции после 'boss'");
         ExpectIdentifierLexeme("Papaya", "Ожидался тип Papaya у функции");
         ExpectDelimiter("(");
 
         List<string> parameters = new();
-        if (!(tokenStream.Peek().Type == TokenType.Delimiter && tokenStream.Peek().Lexeme == ")"))
+        Token nextToken = tokenStream.Peek();
+        if (nextToken.Type != TokenType.Delimiter || nextToken.Lexeme != ")")
         {
             Token param = Expect(TokenType.Identifier, "Ожидалось имя параметра");
             parameters.Add(param.Lexeme);
-            while (tokenStream.Peek().Type == TokenType.Delimiter && tokenStream.Peek().Lexeme == ",")
+            while (true)
             {
-                tokenStream.Advance();
-                param = Expect(TokenType.Identifier, "Ожидалось имя параметра");
-                parameters.Add(param.Lexeme);
+                Token token = tokenStream.Peek();
+                if (token.Type == TokenType.Delimiter && token.Lexeme == ",")
+                {
+                    tokenStream.Advance();
+                    param = Expect(TokenType.Identifier, "Ожидалось имя параметра");
+                    parameters.Add(param.Lexeme);
+                }
+                else
+                {
+                    break;
+                }
             }
         }
 
         ExpectDelimiter(")");
 
-        // Создаем область видимости для функции и объявляем параметры
-        if (environment != null)
-        {
-            context.PushScope();
-            foreach (string paramName in parameters)
-            {
-                context.TryDefineVariable(paramName, 0m);
-            }
-        }
+        Block body = ParseBlock();
 
-        bool hasReturn = ParseBlock(trackReturn: true);
-
-        if (environment != null)
-        {
-            context.PopScope();
-        }
-
-        if (!hasReturn)
-        {
-            throw new InvalidOperationException("В теле функции ожидался 'tank yu'");
-        }
-
-        return false;
+        return new FunctionDefinition(functionName.Lexeme, parameters, body);
     }
 
     /// <summary>
     /// block = "oca!" , { statement } , "stopa" ;
     /// </summary>
-    private bool ParseBlock(bool trackReturn)
+    private Block ParseBlock()
     {
         Expect(TokenType.Oca, "Ожидался старт блока 'oca!'");
-        if (environment != null)
+
+        List<Statement> statements = new List<Statement>();
+
+        // Парсим statements до тех пор, пока не встретим 'stopa'
+        while (tokenStream.Peek().Type != TokenType.Stopa)
         {
-            context.PushScope();
+            Token currentToken = tokenStream.Peek();
+
+            // Если встретили EndOfFile, это ошибка - блок не закрыт
+            if (currentToken.Type == TokenType.EndOfFile)
+            {
+                throw new InvalidOperationException("Ожидался конец блока 'stopa', но достигнут конец файла");
+            }
+
+            Statement stmt = ParseStatement();
+            statements.Add(stmt);
         }
 
-        bool hasReturn = false;
-        try
-        {
-            while (tokenStream.Peek().Type != TokenType.Stopa && tokenStream.Peek().Type != TokenType.EndOfFile)
-            {
-                bool stmtReturn = ParseTopLevelItem(trackReturn);
-                hasReturn = hasReturn || stmtReturn;
-            }
-        }
-        finally
-        {
-            if (environment != null)
-            {
-                context.PopScope();
-            }
-        }
-
+        // Должны быть на токене 'stopa'
         Expect(TokenType.Stopa, "Ожидался конец блока 'stopa'");
-        return hasReturn;
+        return new Block(statements);
     }
 
     /// <summary>
@@ -561,7 +404,7 @@ public class Parser
     /// Правила:
     ///     expression = logical-or-expression ;
     /// </summary>
-    private decimal ParseExpression()
+    private Expression ParseExpression()
     {
         return ParseLogicalOrExpression();
     }
@@ -571,15 +414,15 @@ public class Parser
     /// Правила:
     ///     logical-or-expression = logical-and-expression , { "bo-ca" , logical-and-expression } ;
     /// </summary>
-    private decimal ParseLogicalOrExpression()
+    private Expression ParseLogicalOrExpression()
     {
-        decimal left = ParseLogicalAndExpression();
+        Expression left = ParseLogicalAndExpression();
 
         while (IsOperator("bo-ca"))
         {
             tokenStream.Advance();
-            decimal right = ParseLogicalAndExpression();
-            left = (left != 0 || right != 0) ? 1 : 0;
+            Expression right = ParseLogicalAndExpression();
+            left = new BinaryExpression(left, BinaryExpression.BinaryOperator.LogicalOr, right);
         }
 
         return left;
@@ -590,15 +433,15 @@ public class Parser
     /// Правила:
     ///     logical-and-expression = logical-not-expression , { "tropa" , logical-not-expression } ;
     /// </summary>
-    private decimal ParseLogicalAndExpression()
+    private Expression ParseLogicalAndExpression()
     {
-        decimal left = ParseLogicalNotExpression();
+        Expression left = ParseLogicalNotExpression();
 
         while (IsOperator("tropa"))
         {
             tokenStream.Advance();
-            decimal right = ParseLogicalNotExpression();
-            left = (left != 0 && right != 0) ? 1 : 0;
+            Expression right = ParseLogicalNotExpression();
+            left = new BinaryExpression(left, BinaryExpression.BinaryOperator.LogicalAnd, right);
         }
 
         return left;
@@ -610,13 +453,13 @@ public class Parser
     ///     logical-not-expression = equality-expression
     ///                             | "makoroni" , logical-not-expression ;
     /// </summary>
-    private decimal ParseLogicalNotExpression()
+    private Expression ParseLogicalNotExpression()
     {
         if (IsOperator("makoroni"))
         {
             tokenStream.Advance();
-            decimal value = ParseLogicalNotExpression();
-            return value == 0 ? 1 : 0;
+            Expression operand = ParseLogicalNotExpression();
+            return new UnaryExpression(UnaryExpression.UnaryOperator.LogicalNot, operand);
         }
 
         return ParseEqualityExpression();
@@ -627,18 +470,34 @@ public class Parser
     /// Правила:
     ///     equality-expression = relational-expression , { ("con" | "nocon") , relational-expression } ;
     /// </summary>
-    private decimal ParseEqualityExpression()
+    private Expression ParseEqualityExpression()
     {
-        decimal left = ParseRelationalExpression();
+        Expression left = ParseRelationalExpression();
 
-        while (IsOperator("con") || IsOperator("nocon"))
+        while (true)
         {
-            string op = tokenStream.Peek().Lexeme;
-            tokenStream.Advance();
-            decimal right = ParseRelationalExpression();
+            Token token = tokenStream.Peek();
+            if (token.Type != TokenType.Operator)
+            {
+                break;
+            }
 
-            bool result = op == "con" ? left == right : left != right;
-            left = result ? 1 : 0;
+            if (token.Lexeme == "con")
+            {
+                tokenStream.Advance();
+                Expression right = ParseRelationalExpression();
+                left = new BinaryExpression(left, BinaryExpression.BinaryOperator.Equal, right);
+            }
+            else if (token.Lexeme == "nocon")
+            {
+                tokenStream.Advance();
+                Expression right = ParseRelationalExpression();
+                left = new BinaryExpression(left, BinaryExpression.BinaryOperator.NotEqual, right);
+            }
+            else
+            {
+                break;
+            }
         }
 
         return left;
@@ -650,57 +509,64 @@ public class Parser
     ///     relational-expression = additive-expression ,
     ///                             { ("looka too" , [ "con" ] | "la" , [ "con" ]) , additive-expression } ;
     /// </summary>
-    private decimal ParseRelationalExpression()
+    private Expression ParseRelationalExpression()
     {
-        decimal left = ParseAdditiveExpression();
+        Expression left = ParseAdditiveExpression();
 
-        while (IsOperator("la") || IsOperator("looka"))
+        while (true)
         {
-            string op = tokenStream.Peek().Lexeme;
-            tokenStream.Advance();
-
-            bool hasCon = false;
-
-            // Обработка "la" с опциональным "con"
-            if (op == "la")
+            Token token = tokenStream.Peek();
+            if (token.Type != TokenType.Operator)
             {
-                if (IsOperator("con"))
-                {
-                    tokenStream.Advance();
-                    hasCon = true;
-                }
+                break;
             }
 
-            // Обработка "looka too" с опциональным "con"
-            else if (op == "looka")
+            BinaryExpression.BinaryOperator? binaryOp = null;
+
+            if (token.Lexeme == "lacon")
             {
+                tokenStream.Advance();
+                binaryOp = BinaryExpression.BinaryOperator.LessThanOrEqual;
+            }
+            else if (token.Lexeme == "la")
+            {
+                tokenStream.Advance();
+                bool hasCon = IsOperator("con");
+                if (hasCon)
+                {
+                    tokenStream.Advance();
+                }
+
+                binaryOp = hasCon
+                    ? BinaryExpression.BinaryOperator.LessThanOrEqual
+                    : BinaryExpression.BinaryOperator.LessThan;
+            }
+            else if (token.Lexeme == "looka")
+            {
+                tokenStream.Advance();
                 if (!IsOperator("too"))
                 {
                     throw new InvalidOperationException("После 'looka' ожидалось 'too'");
                 }
 
                 tokenStream.Advance();
-                op = "looka too";
-
-                if (IsOperator("con"))
+                bool hasCon = IsOperator("con");
+                if (hasCon)
                 {
                     tokenStream.Advance();
-                    hasCon = true;
                 }
+
+                binaryOp = hasCon
+                    ? BinaryExpression.BinaryOperator.GreaterThanOrEqual
+                    : BinaryExpression.BinaryOperator.GreaterThan;
+            }
+            else
+            {
+                break;
             }
 
-            decimal right = ParseAdditiveExpression();
-
-            bool result = op switch
-            {
-                "la" when !hasCon => left < right,
-                "la" when hasCon => left <= right,
-                "looka too" when !hasCon => left > right,
-                "looka too" when hasCon => left >= right,
-                _ => throw new InvalidOperationException($"Неизвестный оператор сравнения: {op}")
-            };
-
-            left = result ? 1 : 0;
+            Expression right = ParseAdditiveExpression();
+            left = new BinaryExpression(left, binaryOp.Value, right);
         }
 
         return left;
@@ -712,21 +578,34 @@ public class Parser
     ///     additive-expression = multiplicative-expression ,
     ///                           { ("melomo" | "flavuk") , multiplicative-expression } ;
     /// </summary>
-    private decimal ParseAdditiveExpression()
+    private Expression ParseAdditiveExpression()
     {
-        decimal left = ParseMultiplicativeExpression();
+        Expression left = ParseMultiplicativeExpression();
 
-        while (IsOperator("melomo") || IsOperator("flavuk"))
+        while (true)
         {
-            string op = tokenStream.Peek().Lexeme;
-            tokenStream.Advance();
+            Token token = tokenStream.Peek();
+            if (token.Type != TokenType.Operator)
+            {
+                break;
+            }
 
-            // После бинарного оператора может быть унарный оператор или multiplicative expression
-            // Проверяем только на два бинарных оператора подряд (не унарных)
-            // Унарные операторы обрабатываются в ParseUnaryExpression
-            decimal right = ParseMultiplicativeExpression();
-
-            left = op == "melomo" ? left + right : left - right;
+            if (token.Lexeme == "melomo")
+            {
+                tokenStream.Advance();
+                Expression right = ParseMultiplicativeExpression();
+                left = new BinaryExpression(left, BinaryExpression.BinaryOperator.Add, right);
+            }
+            else if (token.Lexeme == "flavuk")
+            {
+                tokenStream.Advance();
+                Expression right = ParseMultiplicativeExpression();
+                left = new BinaryExpression(left, BinaryExpression.BinaryOperator.Subtract, right);
+            }
+            else
+            {
+                break;
+            }
         }
 
         return left;
@@ -738,23 +617,34 @@ public class Parser
     ///     multiplicative-expression = unary-expression ,
     ///                                 { ("dibotada" | "poopaye" | "pado") , unary-expression } ;
     /// </summary>
-    private decimal ParseMultiplicativeExpression()
+    private Expression ParseMultiplicativeExpression()
     {
-        decimal left = ParseUnaryExpression();
+        Expression left = ParseUnaryExpression();
 
-        while (IsOperator("dibotada") || IsOperator("poopaye") || IsOperator("pado"))
+        while (true)
         {
-            string op = tokenStream.Peek().Lexeme;
-            tokenStream.Advance();
-            decimal right = ParseUnaryExpression();
-
-            left = op switch
+            Token token = tokenStream.Peek();
+            if (token.Type != TokenType.Operator)
             {
-                "dibotada" => left * right,
-                "poopaye" => right != 0 ? left / right : throw new DivideByZeroException("Деление на ноль"),
-                "pado" => right != 0 ? left % right : throw new DivideByZeroException("Остаток от деления на ноль"),
-                _ => throw new InvalidOperationException($"Неизвестный оператор: {op}")
+                break;
+            }
+
+            BinaryExpression.BinaryOperator? binaryOp = token.Lexeme switch
+            {
+                "dibotada" => BinaryExpression.BinaryOperator.Multiply,
+                "poopaye" => BinaryExpression.BinaryOperator.Divide,
+                "pado" => BinaryExpression.BinaryOperator.Modulo,
+                _ => null
             };
+
+            if (binaryOp == null)
+            {
+                break;
+            }
+
+            tokenStream.Advance();
+            Expression right = ParseUnaryExpression();
+            left = new BinaryExpression(left, binaryOp.Value, right);
         }
 
         return left;
@@ -767,18 +657,20 @@ public class Parser
     ///                      | "melomo" , unary-expression
     ///                      | "flavuk" , unary-expression;
     /// </summary>
-    private decimal ParseUnaryExpression()
+    private Expression ParseUnaryExpression()
     {
         if (IsOperator("melomo"))
         {
             tokenStream.Advance();
-            return ParseUnaryExpression();
+            Expression operand = ParseUnaryExpression();
+            return new UnaryExpression(UnaryExpression.UnaryOperator.Plus, operand);
         }
 
         if (IsOperator("flavuk"))
         {
             tokenStream.Advance();
-            return -ParseUnaryExpression();
+            Expression operand = ParseUnaryExpression();
+            return new UnaryExpression(UnaryExpression.UnaryOperator.Minus, operand);
         }
 
         return ParsePowerExpression();
@@ -789,15 +681,15 @@ public class Parser
     /// Правила:
     ///     power-expression = primary-expression , [ "beedo" , power-expression ] ;
     /// </summary>
-    private decimal ParsePowerExpression()
+    private Expression ParsePowerExpression()
     {
-        decimal left = ParsePrimaryExpression();
+        Expression left = ParsePrimaryExpression();
 
         if (IsOperator("beedo"))
         {
             tokenStream.Advance();
-            decimal right = ParsePowerExpression();
-            return (decimal)Math.Pow((double)left, (double)right);
+            Expression right = ParsePowerExpression();
+            return new BinaryExpression(left, BinaryExpression.BinaryOperator.Power, right);
         }
 
         return left;
@@ -812,91 +704,66 @@ public class Parser
     ///                        | "(" , expression , ")"
     ///                        | function-call ;
     /// </summary>
-    private decimal ParsePrimaryExpression()
+    private Expression ParsePrimaryExpression()
     {
         Token token = tokenStream.Peek();
 
-        // Числовой литерал
-        if (token.Type == TokenType.NumberLiteral)
+        return token.Type switch
         {
-            tokenStream.Advance();
-            return decimal.Parse(token.Lexeme, CultureInfo.InvariantCulture);
+            TokenType.NumberLiteral => ParseNumberLiteral(),
+            TokenType.Da => ParseBooleanLiteral(1),
+            TokenType.No => ParseBooleanLiteral(0),
+            TokenType.StringLiteral => ParseStringLiteral(),
+            TokenType.Identifier => ParseIdentifierOrFunctionCall(token.Lexeme),
+            _ when token.Type == TokenType.Delimiter && token.Lexeme == "(" => ParseParenthesizedExpression(),
+            _ => throw new InvalidOperationException($"Неожиданный токен: {token}")
+        };
+    }
+
+    private NumberLiteral ParseBooleanLiteral(decimal value)
+    {
+        tokenStream.Advance();
+        return new NumberLiteral(value);
+    }
+
+    private Expression ParseStringLiteral()
+    {
+        tokenStream.Advance();
+        throw new NotImplementedException("Вычисление строковых литералов не реализовано");
+    }
+
+    private Expression ParseIdentifierOrFunctionCall(string name)
+    {
+        tokenStream.Advance();
+
+        // Проверяем, является ли это константой
+        if (name.Equals("belloPi", StringComparison.OrdinalIgnoreCase))
+        {
+            return new Constant(Constant.ConstantType.Pi);
         }
 
-        // Логические литералы
-        if (token.Type == TokenType.Da)
+        if (name.Equals("belloE", StringComparison.OrdinalIgnoreCase))
         {
-            tokenStream.Advance();
-            return 1;
+            return new Constant(Constant.ConstantType.E);
         }
 
-        if (token.Type == TokenType.No)
+        // Проверяем, является ли это вызовом функции
+        Token nextToken = tokenStream.Peek();
+        if (nextToken.Type == TokenType.Delimiter && nextToken.Lexeme == "(")
         {
-            tokenStream.Advance();
-            return 0;
+            return ParseFunctionCall(name);
         }
 
-        // Строковые литералы (пока не поддерживаем вычисление)
-        if (token.Type == TokenType.StringLiteral)
-        {
-            tokenStream.Advance();
-            throw new NotImplementedException("Вычисление строковых литералов не реализовано");
-        }
+        // Иначе это переменная
+        return new Identifier(name);
+    }
 
-        // Идентификатор или константа
-        if (token.Type == TokenType.Identifier)
-        {
-            tokenStream.Advance();
-            string name = token.Lexeme;
-
-            // Проверяем, является ли это константой
-            if (name.Equals("belloPi", StringComparison.OrdinalIgnoreCase))
-            {
-                return 3.141592653589793m;
-            }
-
-            if (name.Equals("belloE", StringComparison.OrdinalIgnoreCase))
-            {
-                return 2.718281828459045m;
-            }
-
-            // Проверяем, является ли это вызовом функции
-            if (tokenStream.Peek().Type == TokenType.Delimiter && tokenStream.Peek().Lexeme == "(")
-            {
-                return ParseFunctionCall(name);
-            }
-
-            // Иначе это переменная
-            if (syntaxOnlyMode)
-            {
-                // В режиме только синтаксиса возвращаем 0 для неизвестных переменных
-                return 0m;
-            }
-
-            if (context.TryGetVariable(name, out decimal value))
-            {
-                return value;
-            }
-
-            throw new InvalidOperationException($"Неизвестная переменная: {name}");
-        }
-
-        // Скобки
-        if (token.Type == TokenType.Delimiter && token.Lexeme == "(")
-        {
-            tokenStream.Advance();
-            decimal result = ParseExpression();
-
-            if (tokenStream.Peek().Type != TokenType.Delimiter || tokenStream.Peek().Lexeme != ")")
-            {
-                throw new InvalidOperationException("Ожидалась закрывающая скобка ')'");
-            }
-
-            tokenStream.Advance();
-            return result;
-        }
-
-        throw new InvalidOperationException($"Неожиданный токен: {token}");
+    private Expression ParseParenthesizedExpression()
+    {
+        tokenStream.Advance(); // пропускаем '('
+        Expression result = ParseExpression();
+        ExpectDelimiter(")");
+        return result;
     }
 
     /// <summary>
@@ -905,43 +772,45 @@ public class Parser
     ///     function-call = identifier , "(" , [ argument-list ] , ")" ;
     ///     argument-list = expression , { "," , expression } ;
     /// </summary>
-    private decimal ParseFunctionCall(string functionName)
+    private FunctionCall ParseFunctionCall(string functionName)
     {
-        // Уже прочитали идентификатор и открывающую скобку
-        if (tokenStream.Peek().Type != TokenType.Delimiter || tokenStream.Peek().Lexeme != "(")
-        {
-            throw new InvalidOperationException("Ожидалась открывающая скобка '('");
-        }
+        // Уже прочитали идентификатор, открывающая скобка уже проверена в ParsePrimaryExpression
+        tokenStream.Advance(); // пропускаем '('
 
-        tokenStream.Advance();
-
-        List<decimal> arguments = new List<decimal>();
+        List<Expression> arguments = new List<Expression>();
 
         // Если сразу закрывающая скобка, то аргументов нет
-        if (tokenStream.Peek().Type == TokenType.Delimiter && tokenStream.Peek().Lexeme == ")")
+        Token nextToken = tokenStream.Peek();
+        if (nextToken.Type == TokenType.Delimiter && nextToken.Lexeme == ")")
         {
             tokenStream.Advance();
-            return BuiltinFunctions.Invoke(functionName, arguments);
+            return new FunctionCall(functionName, arguments);
         }
 
         // Читаем первый аргумент
         arguments.Add(ParseExpression());
 
         // Читаем остальные аргументы
-        while (tokenStream.Peek().Type == TokenType.Delimiter && tokenStream.Peek().Lexeme == ",")
+        while (true)
         {
-            tokenStream.Advance();
-            arguments.Add(ParseExpression());
+            Token token = tokenStream.Peek();
+            if (token.Type == TokenType.Delimiter && token.Lexeme == ",")
+            {
+                tokenStream.Advance();
+                arguments.Add(ParseExpression());
+            }
+            else if (token.Type == TokenType.Delimiter && token.Lexeme == ")")
+            {
+                tokenStream.Advance();
+                break;
+            }
+            else
+            {
+                throw new InvalidOperationException("Ожидалась закрывающая скобка ')' или запятая ','");
+            }
         }
 
-        // Закрывающая скобка
-        if (tokenStream.Peek().Type != TokenType.Delimiter || tokenStream.Peek().Lexeme != ")")
-        {
-            throw new InvalidOperationException("Ожидалась закрывающая скобка ')' или запятая ','");
-        }
-
-        tokenStream.Advance();
-        return BuiltinFunctions.Invoke(functionName, arguments);
+        return new FunctionCall(functionName, arguments);
     }
 
     /// <summary>
@@ -953,37 +822,17 @@ public class Parser
         return token.Type == TokenType.Operator && token.Lexeme == operatorName;
     }
 
-    private void DefineVariable(string name)
-    {
-        if (environment != null && !context.TryDefineVariable(name, 0m))
-        {
-            throw new InvalidOperationException($"Переменная '{name}' уже объявлена в этой области видимости");
-        }
-    }
-
-    private void AssignVariable(string name, decimal value)
-    {
-        if (environment != null && !context.TryAssignVariable(name, value))
-        {
-            throw new InvalidOperationException($"Переменная '{name}' не объявлена");
-        }
-    }
-
-    private decimal GetVariableValue(string name)
-    {
-        if (!context.TryGetVariable(name, out decimal value))
-        {
-            throw new InvalidOperationException($"Неизвестная переменная: {name}");
-        }
-
-        return value;
-    }
-
     private Token Expect(TokenType type, string message)
     {
         Token token = tokenStream.Peek();
         if (token.Type != type)
         {
+            // Если ожидался определенный токен, но встречен EndOfFile, это может означать незакрытый блок
+            if (token.Type == TokenType.EndOfFile)
+            {
+                throw new InvalidOperationException("Ожидался конец блока 'stopa', но достигнут конец файла");
+            }
+
             throw new InvalidOperationException(message);
         }
 
@@ -1007,7 +856,18 @@ public class Parser
         Token token = tokenStream.Peek();
         if (token.Type != TokenType.Delimiter || token.Lexeme != lexeme)
         {
-            throw new InvalidOperationException($"Ожидался разделитель '{lexeme}'");
+            string actualToken = token.Type == TokenType.EndOfFile 
+                ? "конец файла" 
+                : $"'{token.Lexeme}' (тип: {token.Type})";
+            
+            // Получаем имя метода, который вызвал ExpectDelimiter
+            System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace(skipFrames: 1);
+            string callingMethod = stackTrace.GetFrame(0)?.GetMethod()?.Name ?? "unknown";
+            
+            throw new InvalidOperationException(
+                $"Ожидался разделитель '{lexeme}', но встречен: {actualToken}. " +
+                $"Позиция токена: {token.Position}. " +
+                $"Вызвано из метода: {callingMethod}");
         }
 
         tokenStream.Advance();

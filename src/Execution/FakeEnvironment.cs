@@ -1,6 +1,4 @@
-using Execution;
-
-namespace Parser;
+namespace Execution;
 
 /// <summary>
 /// Поддельное окружение: работает как настоящее, но не совершает реального ввода/вывода.
