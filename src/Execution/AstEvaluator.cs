@@ -103,7 +103,6 @@ public class AstEvaluator : IAstVisitor
         }
     }
 
-    // Реализация IAstVisitor
     public void VisitFunctionDefinition(FunctionDefinition function)
     {
         // Проверяем, не объявлена ли уже функция с таким именем
@@ -126,7 +125,6 @@ public class AstEvaluator : IAstVisitor
         }
     }
 
-    // Выражения - стековый метод вычисления
     public void VisitNumberLiteral(NumberLiteral number)
     {
         if (evaluationStack == null)

@@ -19,7 +19,6 @@ public class Identifier : Expression
     /// </summary>
     public string Name { get; }
 
-    /// <inheritdoc/>
     public override void Accept(IAstVisitor visitor)
     {
         visitor.VisitIdentifier(this);
