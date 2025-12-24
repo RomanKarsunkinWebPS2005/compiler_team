@@ -9,9 +9,9 @@
 - [x] `10 dibotada 5 poopaye 2` → `25`
 - [x] `10 pado 2` → `0`
 - [x] `10 pado 3` → `1`
-- [x] `1.128 melomo 8 flavuk 7.5` → `2` (округление до int)
+- [x] `1.128 melomo 8 flavuk 7.5` → `2`
 - [x] `2 beedo 5` → `32`
-- [x] `(2 melomo 3) poopaye 10` → `0` (округление до int)
+- [x] `(2 melomo 3) poopaye 10` → `0`
 - [x] `(flavuk 2) beedo 10` → `1024`
 - [x] `flavuk 2 beedo 10` → `-1024`
 

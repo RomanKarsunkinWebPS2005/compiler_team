@@ -42,7 +42,7 @@ public class ParserTest
 
         if (expected.Count != actual.Count)
         {
-            Assert.Fail($"Expected {expected.Count} results, but got {actual.Count}. Expected: [{string.Join(", ", expected)}], Actual: [{string.Join(", ", actual)}]");
+            Assert.Fail($"Expected: [{string.Join(", ", expected)}], Actual: [{string.Join(", ", actual)}]");
         }
     }
 
@@ -80,7 +80,6 @@ public class ParserTest
     {
         if (code.Contains("bello!"))
         {
-            // Для программ: проверяем, что ошибка возникает либо при парсинге, либо при выполнении
             Assert.ThrowsAny<Exception>(() =>
             {
                 IReadOnlyList<AstNode> programAst = ParserClass.ParseProgram(code);
@@ -91,7 +90,6 @@ public class ParserTest
         }
         else
         {
-            // Для выражений: проверяем, что ошибка возникает либо при парсинге, либо при вычислении
             Assert.ThrowsAny<Exception>(() =>
             {
                 Expression expr = ParserClass.ParseExpression(code);
