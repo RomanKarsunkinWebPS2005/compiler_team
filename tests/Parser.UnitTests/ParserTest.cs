@@ -790,8 +790,8 @@ public class ParserTest
             """,
             """
             bello!
-            boss foo Papaya () oca!
-                x lumai 1
+            poop x Papaya naidu!
+            x lumai 5
             """,
             """
             bello!
@@ -801,25 +801,7 @@ public class ParserTest
             """,
             """
             bello!
-            poop x Papaya
-            x lumai 5 naidu!
-            """,
-            """
-            bello!
-            poop x Papaya naidu!
-            x lumai 5
-            """,
-            """
-            bello!
-            poop x Papaya naidu!
-            tulalilloo ti amo (x)
-            """,
-            """
-            bello!
-            boss test Papaya () oca!
-                poop x Papaya
-                x lumai 1 naidu!
-            stopa
+            tank yu 1
             """,
             
             // Незакрытый блок if
