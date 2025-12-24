@@ -297,7 +297,7 @@ public class Parser
             throw new InvalidOperationException("Ожидался оператор '=' после имени переменной");
         }
 
-        tokenStream.Advance(); // пропускаем "="
+        tokenStream.Advance();
 
         Expression startExpression = ParseExpression();
 
@@ -308,7 +308,7 @@ public class Parser
             throw new InvalidOperationException("Ожидалось ключевое слово 'to' после начального выражения");
         }
 
-        tokenStream.Advance(); // пропускаем "to"
+        tokenStream.Advance();
 
         Expression endExpression = ParseExpression();
         ExpectDelimiter(")");

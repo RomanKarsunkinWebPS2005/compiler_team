@@ -276,7 +276,6 @@ public class AstEvaluator : IAstVisitor
                     $"Функция '{call.FunctionName}' ожидает {function.Parameters.Count} аргументов, получено {call.Arguments.Count}");
             }
 
-            // Сохраняем текущий стек, так как выполнение функции может изменить его
             Stack<decimal>? savedStack = evaluationStack;
 
             // Создаем новую область видимости для функции
@@ -311,14 +310,12 @@ public class AstEvaluator : IAstVisitor
             }
             finally
             {
-                // Восстанавливаем стек на случай, если он был изменен при выполнении функции
                 evaluationStack = savedStack;
                 isInsideFunction = wasInsideFunction;
                 context.PopScope();
             }
         }
 
-        // Пушим результат в стек
         evaluationStack.Push(result);
     }
 
